@@ -1,0 +1,8 @@
+.multihandle {
+  visibility: visible;
+  background: red;
+
+  &--loading {
+    visibility: hidden;
+  }
+}

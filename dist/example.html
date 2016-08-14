@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" href="multihandle.css">
+</head>
+<body>
+
+  <div class="multihandle multihandle--loading">
+    <input type="range" name="one" value="3" min="2" max="8" step="1" />
+    <input type="range" name="two" value="5" min="2" max="8" step="1" />
+  </div>
+
+
+<script src="multihandle.js"></script>
+<script>
+var els = document.querySelectorAll('.multihandle');
+multihandle.init(els);
+</script>
+</body>
+</html>

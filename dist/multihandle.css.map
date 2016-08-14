@@ -1,0 +1,9 @@
+{
+	"version": 3,
+	"file": "multihandle.css",
+	"sources": [
+		"../src/sass/multihandle.scss"
+	],
+	"mappings": "AAAA,AAAA,YAAY,CAAC;EACX,UAAU,EAAE,OAAQ;EACpB,UAAU,EAAE,GAAI,GAKjB;EAPD,AAAA,qBAAY,CAIC;IACT,UAAU,EAAE,MAAO,GACpB",
+	"names": []
+}
