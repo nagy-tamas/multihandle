@@ -5,9 +5,29 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 (function (window) {
-  var debug = true;
+  /**
+   * Round number to step
+   * @param  float value
+   * @param  float step
+   * @return float
+   */
+  function round(value, step) {
+    step || (step = 1.0);
+    var inv = 1.0 / step;
+    return Math.round(value * inv) / inv;
+  }
 
   var MultiHandle = function () {
+    /**
+     * Creates the component
+     *
+     * You can set the options explicitly through the options array, or
+     * you can use data-* attributes as well.
+     *
+     * @param  DOMNode el       Reference of the DOM element
+     * @param  Object options
+     * @return undefined
+     */
     function MultiHandle(el) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -50,7 +70,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     /**
-     * Creating DOM strings for the handlers
+     * Creates the DOM string of the handlers we can inject in the HTML.
+     *
+     * @return string The handlers
      */
 
 
@@ -64,7 +86,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       /**
-       * Finding the handlers in the existing DOM
+       * Finding the handlers in the container node.
+       *
+       * @param  DOMNode container
+       * @return undefined
        */
 
     }, {
@@ -79,6 +104,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * Update the handlers to reflect the inputs' state
+       *
+       * @return undefined
        */
 
     }, {
@@ -93,15 +120,74 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           el.innerHTML = el.innerHTML.replace(/\${value}/, value);
         });
       }
+
+      /**
+       * Update the values of the input fields
+       *
+       * @return undefined
+       */
+
+    }, {
+      key: 'updateInputs',
+      value: function updateInputs() {
+        var self = this;
+
+        this.handlerEls.forEach(function (handler) {
+          var input = handler.inputReference;
+          input.value = self.percentToValue(parseFloat(handler.style.left, 10));
+        });
+      }
+
+      /**
+       * Transforms an input value with a min/max threshold to a percent value
+       *
+       * @param  float val
+       * @return float percentage
+       */
+
     }, {
       key: 'valueToPercent',
       value: function valueToPercent(val) {
         var scale = this.options.max - this.options.min;
-        return val / scale * 100;
+        return 100 / scale * (val - this.options.min);
       }
 
       /**
-       * Creating the track and the handlers
+       * Comes handy when the user drags the element, and all we have is the left coordinate
+       *
+       * @param  float px
+       * @return float percent
+       */
+
+    }, {
+      key: 'pxToPercent',
+      value: function pxToPercent(px) {
+        var full = this.el.scrollWidth;
+        return px / full * 100;
+      }
+
+      /**
+       * Gives back the value based on the current handler position
+       *
+       * @param  float percent
+       * @return float value
+       */
+
+    }, {
+      key: 'percentToValue',
+      value: function percentToValue(percent) {
+        var scale = this.options.max - this.options.min;
+        // before rounding to options.step
+        var rawValue = percent / (100 / scale) + this.options.min;
+        var rounded = round(rawValue, this.options.step);
+
+        return rounded;
+      }
+
+      /**
+       * Creating the range track and the handlers
+       *
+       * @return undefined
        */
 
     }, {
@@ -123,6 +209,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * Adding eventlisteners
+       *
+       * @return undefined
        */
 
     }, {
@@ -139,49 +227,73 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         document.body.addEventListener('mousemove', function (evt) {
           return _this.onMouseMove(evt);
         });
+        document.body.addEventListener('dragstart', function () {
+          return false;
+        });
       }
 
       /**
        * We may start dragging one of the handlers
+       *
+       * @param  Event evt
+       * @return undefined
        */
 
     }, {
       key: 'onMouseDown',
       value: function onMouseDown(evt) {
-        debug && console.log('MultiHandle:onMouseDown', evt);
         var found = this.handlerEls.indexOf(evt.target);
         // click triggered on the track, not on one of the handlers
         if (found < 0) {
-          return false;
+          return;
         }
 
         this.dragging = {
           handlerIx: found,
           handler: this.handlerEls[found],
+          startLeft: this.handlerEls[found].offsetLeft,
           startX: evt.clientX
         };
-        return true;
       }
 
       /**
        * Dragging stopped
+       *
+       * @return undefined
        */
 
     }, {
       key: 'onMouseUp',
       value: function onMouseUp() {
-        debug && console.log('MultiHandle:onMouseUp');
         this.dragging = false;
       }
     }, {
+      key: 'normalizePercent',
+      value: function normalizePercent(percent) {
+        percent = Math.max(0, percent);
+        percent = Math.min(100, percent);
+
+        return percent;
+      }
+
+      /**
+       * Moving one of the handlers, if it's in dragging state
+       *
+       * @param  Event evt
+       * @return undefined
+       */
+
+    }, {
       key: 'onMouseMove',
       value: function onMouseMove(evt) {
-        debug && console.log('MultiHandle:onMouseMove');
-        console.log();
         if (this.dragging && this.dragging.handlerIx > -1) {
-          var newLeft = evt.clientX;
-          console.log(this.dragging.startX, evt.clientX);
-          this.dragging.handler.style.left = newLeft + 'px';
+          var newLeft = this.dragging.startLeft - (this.dragging.startX - evt.clientX);
+          var percent = this.normalizePercent(this.pxToPercent(newLeft));
+          var value = this.percentToValue(percent);
+
+          this.dragging.handler.style.left = percent + '%';
+          this.dragging.handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
+          this.updateInputs();
         }
       }
     }]);
@@ -189,12 +301,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return MultiHandle;
   }();
 
+  /**
+   * Create multihandler components of the given array of DOMNodes
+   *
+   * @param  Array els    Node list of DOM elements
+   * @return undefined
+   */
+
+
   var init = function init(els) {
     els.forEach(function (el) {
       return new MultiHandle(el);
     });
   };
 
+  /**
+   * Exported API in the window namespace
+   */
   window.multihandle = {
     init: init
   };

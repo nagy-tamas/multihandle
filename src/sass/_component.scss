@@ -14,13 +14,16 @@
 
 .multihandle__track {
   height: $multihandle-track-height;
+  position: relative;
 }
 
 .multihandle__handle {
   width: $multihandle-handle-width;
   height: $multihandle-handle-height;
-  background: yellow;
+  background: $multihandle-handle-color;
+  cursor: pointer;
   position: absolute;
   left: 0;
+  margin-left: - $multihandle-handle-width / 2;
   top: 0;
 }
