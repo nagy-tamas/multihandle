@@ -1,15 +1,14 @@
 .multihandle {
   visibility: visible;
-  user-select: none;
-  height: $multihandle-handle-height;
 
   &--loading {
     visibility: hidden;
   }
+}
 
-  input {
-    display: none;
-  }
+.multihandle__component {
+  height: $multihandle-handle-height;
+  user-select: none;
 }
 
 .multihandle__track {

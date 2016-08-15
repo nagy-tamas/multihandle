@@ -47,13 +47,19 @@
       // are we dragging something?
       this.dragging = false;
 
+      // the component will be generated here
+      this.container = this.el.querySelector('.multihandle__component');
+      if (!this.container) {
+        this.container = this.el;
+      }
+
       // reference to the original handlers, converted to an array
-      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input[type=hidden]'));
+      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input'));
       this.handlerEls = [];
       this.lines = [];
 
       // creating the component
-      this.buildDOM();
+      this.buildComponent();
       this.updateHandlers();
       this.updateLines();
 
@@ -81,9 +87,9 @@
      * @param  DOMNode container
      * @return undefined
      */
-    findHandlers(container) {
+    findHandlers(track) {
       const self = this;
-      container.querySelectorAll('.multihandle__handle').forEach((el) => {
+      track.querySelectorAll('.multihandle__handle').forEach((el) => {
         el.inputReference = self.el.querySelector(`input[name=${el.dataset.for}]`);
         self.handlerEls.push(el);
       });
@@ -153,11 +159,11 @@
      *
      * @return undefined
      */
-    buildDOM() {
+    buildComponent() {
       // creating the track element
       const track = document.createElement('div');
       track.className = 'multihandle__track';
-      this.el.appendChild(track);
+      this.container.appendChild(track);
 
       // putting the handlers on the track
       track.innerHTML = this.options.tpl.track.replace(/\${handlers}/, this.createHandlers());
@@ -166,7 +172,7 @@
       this.createLines(track);
 
       // putting the whole component in the container
-      this.el.appendChild(track);
+      this.container.appendChild(track);
     }
 
     /**
@@ -175,7 +181,7 @@
      * @return undefined
      */
     bindEvents() {
-      this.el.addEventListener('mousedown', evt => this.onMouseDown(evt));
+      this.container.addEventListener('mousedown', evt => this.onMouseDown(evt));
       document.body.addEventListener('mouseup', evt => this.onMouseUp(evt));
       document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
       document.body.addEventListener('dragstart', () => (false));
@@ -262,7 +268,7 @@
      * @return float percent
      */
     pxToPercent(px) {
-      const full = this.el.scrollWidth;
+      const full = this.container.scrollWidth;
       return (px / full) * 100;
     }
 

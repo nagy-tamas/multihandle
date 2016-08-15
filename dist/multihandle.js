@@ -57,13 +57,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // are we dragging something?
       this.dragging = false;
 
+      // the component will be generated here
+      this.container = this.el.querySelector('.multihandle__component');
+      if (!this.container) {
+        this.container = this.el;
+      }
+
       // reference to the original handlers, converted to an array
-      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input[type=hidden]'));
+      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input'));
       this.handlerEls = [];
       this.lines = [];
 
       // creating the component
-      this.buildDOM();
+      this.buildComponent();
       this.updateHandlers();
       this.updateLines();
 
@@ -96,9 +102,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     }, {
       key: 'findHandlers',
-      value: function findHandlers(container) {
+      value: function findHandlers(track) {
         var self = this;
-        container.querySelectorAll('.multihandle__handle').forEach(function (el) {
+        track.querySelectorAll('.multihandle__handle').forEach(function (el) {
           el.inputReference = self.el.querySelector('input[name=' + el.dataset.for + ']');
           self.handlerEls.push(el);
         });
@@ -179,12 +185,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'buildDOM',
-      value: function buildDOM() {
+      key: 'buildComponent',
+      value: function buildComponent() {
         // creating the track element
         var track = document.createElement('div');
         track.className = 'multihandle__track';
-        this.el.appendChild(track);
+        this.container.appendChild(track);
 
         // putting the handlers on the track
         track.innerHTML = this.options.tpl.track.replace(/\${handlers}/, this.createHandlers());
@@ -193,7 +199,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.createLines(track);
 
         // putting the whole component in the container
-        this.el.appendChild(track);
+        this.container.appendChild(track);
       }
 
       /**
@@ -207,7 +213,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function bindEvents() {
         var _this = this;
 
-        this.el.addEventListener('mousedown', function (evt) {
+        this.container.addEventListener('mousedown', function (evt) {
           return _this.onMouseDown(evt);
         });
         document.body.addEventListener('mouseup', function (evt) {
@@ -320,7 +326,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'pxToPercent',
       value: function pxToPercent(px) {
-        var full = this.el.scrollWidth;
+        var full = this.container.scrollWidth;
         return px / full * 100;
       }
 
