@@ -1,0 +1,26 @@
+.multihandle {
+  visibility: visible;
+  background: red;
+  user-select: none;
+
+  &--loading {
+    visibility: hidden;
+  }
+
+  input {
+    display: none;
+  }
+}
+
+.multihandle__track {
+  height: $multihandle-track-height;
+}
+
+.multihandle__handle {
+  width: $multihandle-handle-width;
+  height: $multihandle-handle-height;
+  background: yellow;
+  position: absolute;
+  left: 0;
+  top: 0;
+}

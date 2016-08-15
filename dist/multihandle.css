@@ -1,7 +1,21 @@
 .multihandle {
   visibility: visible;
-  background: red; }
+  background: red;
+  user-select: none; }
   .multihandle--loading {
     visibility: hidden; }
+  .multihandle input {
+    display: none; }
+
+.multihandle__track {
+  height: 3px; }
+
+.multihandle__handle {
+  width: 20px;
+  height: 20px;
+  background: yellow;
+  position: absolute;
+  left: 0;
+  top: 0; }
 
 /*# sourceMappingURL=multihandle.css.map */

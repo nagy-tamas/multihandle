@@ -32,7 +32,7 @@ module.exports = function (grunt) {
     },
 
     eslint: {
-      files: ['Gruntfile.js', 'src/**/*.js']
+      files: ['Gruntfile.js', 'src/multihandle.js']
     },
 
     watch: {
