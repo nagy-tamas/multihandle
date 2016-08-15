@@ -23,6 +23,14 @@ module.exports = function (grunt) {
       }
     },
 
+    copy: {
+      dist: {
+        files: {
+          'dist/polyfill.js': 'src/polyfill.js'
+        }
+      }
+    },
+
     eslint: {
       files: ['Gruntfile.js', 'src/**/*.js']
     },
@@ -36,12 +44,13 @@ module.exports = function (grunt) {
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-sass');
 
-  grunt.registerTask('dev', ['eslint', 'babel', 'sass']);
+  grunt.registerTask('dev', ['eslint', 'babel', 'copy', 'sass']);
   grunt.registerTask('continuous', ['dev', 'watch']);
   grunt.registerTask('default', ['dev']);
 };
