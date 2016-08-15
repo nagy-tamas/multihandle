@@ -34,8 +34,8 @@
         max: 100,
         step: 1,
         tpl: {
-          track: '${handlers}',          // must have a single root element!
-          handler: '${value}'            // must have a single root element!
+          track: '${handlers}',
+          handler: '${value}'
         }
       }, this.el.dataset, options);
 
@@ -50,10 +50,12 @@
       // reference to the original handlers, converted to an array
       this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input[type=hidden]'));
       this.handlerEls = [];
+      this.lines = [];
 
       // creating the component
       this.buildDOM();
       this.updateHandlers();
+      this.updateLines();
 
       // binding events to the component
       this.bindEvents();
@@ -101,6 +103,131 @@
         el.style.left = `${percent}%`;
         el.innerHTML = el.innerHTML.replace(/\${value}/, value);
       });
+    }
+
+    /**
+     * Creating lines between the handlers
+     *
+     * @return string The lines
+     */
+    createLines(track) {
+      if (this.handlerEls.length < 2) {
+        return;
+      }
+
+      // let's create a between the current handler, and the next one
+      for (let i = 0; i < this.handlerEls.length - 1; i++) {
+        const line = document.createElement('span');
+        line.className = `multihandle__line multihandle__line--${i}`;
+        line.lineFrom = this.handlerEls[i];
+        line.lineTo = this.handlerEls[i + 1];
+
+        this.lines.push(line);
+        track.appendChild(line);
+      }
+    }
+
+    /**
+     * Updating the lines between the handlers for proper sizing
+     *
+     * @return undefined
+     */
+    updateLines() {
+      if (this.handlerEls.length < 2) {
+        return;
+      }
+
+      this.lines.forEach((line) => {
+        const handler1 = parseFloat(line.lineTo.style.left, 10);
+        const handler2 = parseFloat(line.lineFrom.style.left, 10);
+        const left = Math.min(handler1, handler2);
+        const width = Math.abs(handler1 - handler2);
+
+        line.style.left = `${left}%`;
+        line.style.width = `${width}%`;
+      });
+    }
+
+    /**
+     * Creating the range track and the handlers
+     *
+     * @return undefined
+     */
+    buildDOM() {
+      // creating the track element
+      const track = document.createElement('div');
+      track.className = 'multihandle__track';
+      this.el.appendChild(track);
+
+      // putting the handlers on the track
+      track.innerHTML = this.options.tpl.track.replace(/\${handlers}/, this.createHandlers());
+      this.findHandlers(track);
+
+      this.createLines(track);
+
+      // putting the whole component in the container
+      this.el.appendChild(track);
+    }
+
+    /**
+     * Adding eventlisteners
+     *
+     * @return undefined
+     */
+    bindEvents() {
+      this.el.addEventListener('mousedown', evt => this.onMouseDown(evt));
+      document.body.addEventListener('mouseup', evt => this.onMouseUp(evt));
+      document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
+      document.body.addEventListener('dragstart', () => (false));
+    }
+
+    /**
+     * We may start dragging one of the handlers
+     *
+     * @param  Event evt
+     * @return undefined
+     */
+    onMouseDown(evt) {
+      const found = this.handlerEls.indexOf(evt.target);
+      // click triggered on the track, not on one of the handlers
+      if (found < 0) {
+        return;
+      }
+
+      this.dragging = {
+        handlerIx: found,
+        handler: this.handlerEls[found],
+        startLeft: this.handlerEls[found].offsetLeft,
+        startX: evt.clientX
+      };
+    }
+
+    /**
+     * Dragging stopped
+     *
+     * @return undefined
+     */
+    onMouseUp() {
+      this.dragging = false;
+    }
+
+    /**
+     * Moving one of the handlers, if it's in dragging state
+     *
+     * @param  Event evt
+     * @return undefined
+     */
+    onMouseMove(evt) {
+      if (this.dragging && this.dragging.handlerIx > -1) {
+        const newLeft = this.dragging.startLeft - (this.dragging.startX - evt.clientX);
+        const percent = this.normalizePercent(this.pxToPercent(newLeft));
+        const value = this.percentToValue(percent);
+
+        this.dragging.handler.style.left = `${percent}%`;
+        this.dragging.handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
+        this.updateInputs();
+        this.updateLines();
+      }
     }
 
     /**
@@ -154,91 +281,11 @@
       return rounded;
     }
 
-    /**
-     * Creating the range track and the handlers
-     *
-     * @return undefined
-     */
-    buildDOM() {
-      // creating the track element
-      const track = document.createElement('div');
-      track.className = 'multihandle__track';
-      track.innerHTML = this.options.tpl.track;
-      this.el.appendChild(track);
-
-      // putting the handlers on the track
-      track.innerHTML = track.innerHTML.replace(/\${handlers}/, this.createHandlers());
-      this.findHandlers(track);
-
-      // putting the whole component in the container
-      this.el.appendChild(track);
-    }
-
-    /**
-     * Adding eventlisteners
-     *
-     * @return undefined
-     */
-    bindEvents() {
-      this.el.addEventListener('mousedown', evt => this.onMouseDown(evt));
-      document.body.addEventListener('mouseup', evt => this.onMouseUp(evt));
-      document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
-      document.body.addEventListener('dragstart', () => (false));
-    }
-
-    /**
-     * We may start dragging one of the handlers
-     *
-     * @param  Event evt
-     * @return undefined
-     */
-    onMouseDown(evt) {
-      const found = this.handlerEls.indexOf(evt.target);
-      // click triggered on the track, not on one of the handlers
-      if (found < 0) {
-        return;
-      }
-
-      this.dragging = {
-        handlerIx: found,
-        handler: this.handlerEls[found],
-        startLeft: this.handlerEls[found].offsetLeft,
-        startX: evt.clientX
-      };
-    }
-
-    /**
-     * Dragging stopped
-     *
-     * @return undefined
-     */
-    onMouseUp() {
-      this.dragging = false;
-    }
-
     normalizePercent(percent) {
       percent = Math.max(0, percent);
       percent = Math.min(100, percent);
 
       return this.valueToPercent(this.percentToValue(percent));
-    }
-
-    /**
-     * Moving one of the handlers, if it's in dragging state
-     *
-     * @param  Event evt
-     * @return undefined
-     */
-    onMouseMove(evt) {
-      if (this.dragging && this.dragging.handlerIx > -1) {
-        const newLeft = this.dragging.startLeft - (this.dragging.startX - evt.clientX);
-        const percent = this.normalizePercent(this.pxToPercent(newLeft));
-        const value = this.percentToValue(percent);
-
-        this.dragging.handler.style.left = `${percent}%`;
-        this.dragging.handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
-        this.updateInputs();
-      }
     }
   }
 

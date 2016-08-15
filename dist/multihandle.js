@@ -44,8 +44,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         max: 100,
         step: 1,
         tpl: {
-          track: '${handlers}', // must have a single root element!
-          handler: '${value}' // must have a single root element!
+          track: '${handlers}',
+          handler: '${value}'
         }
       }, this.el.dataset, options);
 
@@ -60,10 +60,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // reference to the original handlers, converted to an array
       this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input[type=hidden]'));
       this.handlerEls = [];
+      this.lines = [];
 
       // creating the component
       this.buildDOM();
       this.updateHandlers();
+      this.updateLines();
 
       // binding events to the component
       this.bindEvents();
@@ -122,66 +124,52 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       /**
-       * Update the values of the input fields
+       * Creating lines between the handlers
+       *
+       * @return string The lines
+       */
+
+    }, {
+      key: 'createLines',
+      value: function createLines(track) {
+        if (this.handlerEls.length < 2) {
+          return;
+        }
+
+        // let's create a between the current handler, and the next one
+        for (var i = 0; i < this.handlerEls.length - 1; i++) {
+          var line = document.createElement('span');
+          line.className = 'multihandle__line multihandle__line--' + i;
+          line.lineFrom = this.handlerEls[i];
+          line.lineTo = this.handlerEls[i + 1];
+
+          this.lines.push(line);
+          track.appendChild(line);
+        }
+      }
+
+      /**
+       * Updating the lines between the handlers for proper sizing
        *
        * @return undefined
        */
 
     }, {
-      key: 'updateInputs',
-      value: function updateInputs() {
-        var self = this;
+      key: 'updateLines',
+      value: function updateLines() {
+        if (this.handlerEls.length < 2) {
+          return;
+        }
 
-        this.handlerEls.forEach(function (handler) {
-          var input = handler.inputReference;
-          input.value = self.percentToValue(parseFloat(handler.style.left, 10));
+        this.lines.forEach(function (line) {
+          var handler1 = parseFloat(line.lineTo.style.left, 10);
+          var handler2 = parseFloat(line.lineFrom.style.left, 10);
+          var left = Math.min(handler1, handler2);
+          var width = Math.abs(handler1 - handler2);
+
+          line.style.left = left + '%';
+          line.style.width = width + '%';
         });
-      }
-
-      /**
-       * Transforms an input value with a min/max threshold to a percent value
-       *
-       * @param  float val
-       * @return float percentage
-       */
-
-    }, {
-      key: 'valueToPercent',
-      value: function valueToPercent(val) {
-        var scale = this.options.max - this.options.min;
-        return 100 / scale * (val - this.options.min);
-      }
-
-      /**
-       * Comes handy when the user drags the element, and all we have is the left coordinate
-       *
-       * @param  float px
-       * @return float percent
-       */
-
-    }, {
-      key: 'pxToPercent',
-      value: function pxToPercent(px) {
-        var full = this.el.scrollWidth;
-        return px / full * 100;
-      }
-
-      /**
-       * Gives back the value based on the current handler position
-       *
-       * @param  float percent
-       * @return float value
-       */
-
-    }, {
-      key: 'percentToValue',
-      value: function percentToValue(percent) {
-        var scale = this.options.max - this.options.min;
-        // before rounding to options.step
-        var rawValue = percent / (100 / scale) + this.options.min;
-        var rounded = round(rawValue, this.options.step);
-
-        return rounded;
       }
 
       /**
@@ -196,12 +184,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         // creating the track element
         var track = document.createElement('div');
         track.className = 'multihandle__track';
-        track.innerHTML = this.options.tpl.track;
         this.el.appendChild(track);
 
         // putting the handlers on the track
-        track.innerHTML = track.innerHTML.replace(/\${handlers}/, this.createHandlers());
+        track.innerHTML = this.options.tpl.track.replace(/\${handlers}/, this.createHandlers());
         this.findHandlers(track);
+
+        this.createLines(track);
 
         // putting the whole component in the container
         this.el.appendChild(track);
@@ -267,14 +256,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function onMouseUp() {
         this.dragging = false;
       }
-    }, {
-      key: 'normalizePercent',
-      value: function normalizePercent(percent) {
-        percent = Math.max(0, percent);
-        percent = Math.min(100, percent);
-
-        return this.valueToPercent(this.percentToValue(percent));
-      }
 
       /**
        * Moving one of the handlers, if it's in dragging state
@@ -294,7 +275,79 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.dragging.handler.style.left = percent + '%';
           this.dragging.handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
           this.updateInputs();
+          this.updateLines();
         }
+      }
+
+      /**
+       * Update the values of the input fields
+       *
+       * @return undefined
+       */
+
+    }, {
+      key: 'updateInputs',
+      value: function updateInputs() {
+        var self = this;
+
+        this.handlerEls.forEach(function (handler) {
+          var input = handler.inputReference;
+          input.value = self.percentToValue(parseFloat(handler.style.left, 10));
+        });
+      }
+
+      /**
+       * Transforms an input value with a min/max threshold to a percent value
+       *
+       * @param  float val
+       * @return float percentage
+       */
+
+    }, {
+      key: 'valueToPercent',
+      value: function valueToPercent(val) {
+        var scale = this.options.max - this.options.min;
+        return 100 / scale * (val - this.options.min);
+      }
+
+      /**
+       * Comes handy when the user drags the element, and all we have is the left coordinate
+       *
+       * @param  float px
+       * @return float percent
+       */
+
+    }, {
+      key: 'pxToPercent',
+      value: function pxToPercent(px) {
+        var full = this.el.scrollWidth;
+        return px / full * 100;
+      }
+
+      /**
+       * Gives back the value based on the current handler position
+       *
+       * @param  float percent
+       * @return float value
+       */
+
+    }, {
+      key: 'percentToValue',
+      value: function percentToValue(percent) {
+        var scale = this.options.max - this.options.min;
+        // before rounding to options.step
+        var rawValue = percent / (100 / scale) + this.options.min;
+        var rounded = round(rawValue, this.options.step);
+
+        return rounded;
+      }
+    }, {
+      key: 'normalizePercent',
+      value: function normalizePercent(percent) {
+        percent = Math.max(0, percent);
+        percent = Math.min(100, percent);
+
+        return this.valueToPercent(this.percentToValue(percent));
       }
     }]);
 

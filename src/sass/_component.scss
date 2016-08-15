@@ -28,4 +28,12 @@
   position: absolute;
   top: -$multihandle-handle-height / 2;
   left: 0;
+  z-index: 1;
+}
+
+.multihandle__line {
+  display: block;
+  height: $multihandle-track-height;
+  position: absolute;
+  background: yellow;
 }
