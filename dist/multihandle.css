@@ -1,7 +1,10 @@
 .multihandle {
   visibility: visible;
   background: red;
-  user-select: none; }
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none; }
   .multihandle--loading {
     visibility: hidden; }
   .multihandle input {
@@ -17,5 +20,4 @@
   position: absolute;
   left: 0;
   top: 0; }
-
-/*# sourceMappingURL=multihandle.css.map */
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9zYXNzL19jb21wb25lbnQuc2NzcyIsIi4uL3NyYy9zYXNzL192YXJpYWJsZXMuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFLG9CQUFvQjtFQUNwQixnQkFBZ0I7RUFDaEIsMEJBQWtCO0tBQWxCLHVCQUFrQjtNQUFsQixzQkFBa0I7VUFBbEIsa0JBQWtCLEVBU25CO0VBWkQ7SUFNSSxtQkFBbUIsRUFDcEI7RUFQSDtJQVVJLGNBQWMsRUFDZjs7QUFHSDtFQUNFLFlDZjRCLEVEZ0I3Qjs7QUFFRDtFQUNFLFlDbEI2QjtFRG1CN0IsYUNsQjhCO0VEbUI5QixtQkFBbUI7RUFDbkIsbUJBQW1CO0VBQ25CLFFBQVE7RUFDUixPQUFPLEVBQ1IiLCJmaWxlIjoibXVsdGloYW5kbGUuY3NzIiwic291cmNlc0NvbnRlbnQiOltudWxsLG51bGxdfQ== */
