@@ -58,7 +58,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.dragging = false;
 
       // reference to the original handlers, converted to an array
-      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input[type=range]'));
+      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input[type=hidden]'));
       this.handlerEls = [];
 
       // creating the component
@@ -273,7 +273,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         percent = Math.max(0, percent);
         percent = Math.min(100, percent);
 
-        return percent;
+        return this.valueToPercent(this.percentToValue(percent));
       }
 
       /**

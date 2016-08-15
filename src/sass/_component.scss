@@ -1,7 +1,7 @@
 .multihandle {
   visibility: visible;
-  background: red;
   user-select: none;
+  height: $multihandle-handle-height;
 
   &--loading {
     visibility: hidden;
@@ -14,16 +14,18 @@
 
 .multihandle__track {
   height: $multihandle-track-height;
+  background: $multihandle-track-color;
+  top: $multihandle-handle-height / 2 - $multihandle-track-height / 2;
   position: relative;
 }
 
 .multihandle__handle {
   width: $multihandle-handle-width;
   height: $multihandle-handle-height;
+  margin-left: - $multihandle-handle-width / 2;
   background: $multihandle-handle-color;
   cursor: pointer;
   position: absolute;
+  top: -$multihandle-handle-height / 2;
   left: 0;
-  margin-left: - $multihandle-handle-width / 2;
-  top: 0;
 }

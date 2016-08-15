@@ -12,8 +12,9 @@
   <form action="" method="get">
 
   <div class="multihandle multihandle--loading" data-min="2" data-max="8" data-step="0.2">
-    <input type="range" name="one" value="3" />
-    <input type="range" name="two" value="7" />
+    <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
+    <input type="hidden" name="one" value="3" />
+    <input type="hidden" name="two" value="7" />
   </div>
 
   <br><br>
