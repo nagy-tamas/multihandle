@@ -89,8 +89,8 @@
      */
     findHandlers(track) {
       const self = this;
-      track.querySelectorAll('.multihandle__handle').forEach((el) => {
-        el.inputReference = self.el.querySelector(`input[name=${el.dataset.for}]`);
+      track.querySelectorAll('.multihandle__handle').forEach((el, ix) => {
+        el.inputReference = this.handlers[ix];
         self.handlerEls.push(el);
       });
     }
@@ -188,7 +188,6 @@
       document.body.addEventListener('touchcancel', evt => this.onMouseUp(evt));
       document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
       document.body.addEventListener('touchmove', evt => this.onMouseMove(evt));
-      document.body.addEventListener('dragstart', () => (false));
     }
 
     /**
@@ -229,6 +228,7 @@
         startX: this.getClientX(evt)
       };
 
+      document.body.classList.add('multihandle-disable-drag');
       console.log(evt, this.dragging);
     }
 
@@ -239,6 +239,7 @@
      */
     onMouseUp() {
       this.dragging = false;
+      document.body.classList.remove('multihandle-disable-drag');
     }
 
     /**
@@ -320,7 +321,7 @@
   }
 
   /**
-   * Create multihandler components of the given array of DOMNodes
+   * Create multihandler components from the given array of DOMNodes
    *
    * @param  Array els    Node list of DOM elements
    * @return undefined

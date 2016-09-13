@@ -103,9 +103,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'findHandlers',
       value: function findHandlers(track) {
+        var _this = this;
+
         var self = this;
-        track.querySelectorAll('.multihandle__handle').forEach(function (el) {
-          el.inputReference = self.el.querySelector('input[name=' + el.dataset.for + ']');
+        track.querySelectorAll('.multihandle__handle').forEach(function (el, ix) {
+          el.inputReference = _this.handlers[ix];
           self.handlerEls.push(el);
         });
       }
@@ -211,31 +213,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'bindEvents',
       value: function bindEvents() {
-        var _this = this;
+        var _this2 = this;
 
         this.container.addEventListener('mousedown', function (evt) {
-          return _this.onMouseDown(evt);
+          return _this2.onMouseDown(evt);
         });
         this.container.addEventListener('touchstart', function (evt) {
-          return _this.onMouseDown(evt);
+          return _this2.onMouseDown(evt);
         });
         document.body.addEventListener('mouseup', function (evt) {
-          return _this.onMouseUp(evt);
+          return _this2.onMouseUp(evt);
         });
         document.body.addEventListener('touchend', function (evt) {
-          return _this.onMouseUp(evt);
+          return _this2.onMouseUp(evt);
         });
         document.body.addEventListener('touchcancel', function (evt) {
-          return _this.onMouseUp(evt);
+          return _this2.onMouseUp(evt);
         });
         document.body.addEventListener('mousemove', function (evt) {
-          return _this.onMouseMove(evt);
+          return _this2.onMouseMove(evt);
         });
         document.body.addEventListener('touchmove', function (evt) {
-          return _this.onMouseMove(evt);
-        });
-        document.body.addEventListener('dragstart', function () {
-          return false;
+          return _this2.onMouseMove(evt);
         });
       }
 
@@ -283,6 +282,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           startX: this.getClientX(evt)
         };
 
+        document.body.classList.add('multihandle-disable-drag');
         console.log(evt, this.dragging);
       }
 
@@ -296,6 +296,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'onMouseUp',
       value: function onMouseUp() {
         this.dragging = false;
+        document.body.classList.remove('multihandle-disable-drag');
       }
 
       /**
@@ -396,7 +397,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }();
 
   /**
-   * Create multihandler components of the given array of DOMNodes
+   * Create multihandler components from the given array of DOMNodes
    *
    * @param  Array els    Node list of DOM elements
    * @return undefined

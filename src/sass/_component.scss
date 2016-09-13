@@ -8,7 +8,6 @@
 
 .multihandle__component {
   height: $multihandle-handle-height;
-  user-select: none;
 }
 
 .multihandle__track {
@@ -35,4 +34,8 @@
   height: $multihandle-track-height;
   position: absolute;
   background: $multihandle-line-color;
+}
+
+body.multihandle-disable-drag {
+  user-select: none;
 }
