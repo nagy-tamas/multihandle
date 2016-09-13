@@ -182,9 +182,31 @@
      */
     bindEvents() {
       this.container.addEventListener('mousedown', evt => this.onMouseDown(evt));
+      this.container.addEventListener('touchstart', evt => this.onMouseDown(evt));
       document.body.addEventListener('mouseup', evt => this.onMouseUp(evt));
+      document.body.addEventListener('touchend', evt => this.onMouseUp(evt));
+      document.body.addEventListener('touchcancel', evt => this.onMouseUp(evt));
       document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
+      document.body.addEventListener('touchmove', evt => this.onMouseMove(evt));
       document.body.addEventListener('dragstart', () => (false));
+    }
+
+    /**
+     * utility method that returns the normalized clintX property of an event
+     *
+     * @param Event evt
+     * @return Float
+     */
+    getClientX(evt) {
+      if (typeof evt.clientX !== 'undefined') {
+        return evt.clientX;
+      }
+
+      if (evt.touches[0]) {
+        return evt.touches[0].clientX;
+      }
+
+      return undefined;
     }
 
     /**
@@ -204,8 +226,10 @@
         handlerIx: found,
         handler: this.handlerEls[found],
         startLeft: this.handlerEls[found].offsetLeft,
-        startX: evt.clientX
+        startX: this.getClientX(evt)
       };
+
+      console.log(evt, this.dragging);
     }
 
     /**
@@ -225,7 +249,7 @@
      */
     onMouseMove(evt) {
       if (this.dragging && this.dragging.handlerIx > -1) {
-        const newLeft = this.dragging.startLeft - (this.dragging.startX - evt.clientX);
+        const newLeft = this.dragging.startLeft - (this.dragging.startX - this.getClientX(evt));
         const percent = this.normalizePercent(this.pxToPercent(newLeft));
         const value = this.percentToValue(percent);
 

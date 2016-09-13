@@ -216,15 +216,48 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.container.addEventListener('mousedown', function (evt) {
           return _this.onMouseDown(evt);
         });
+        this.container.addEventListener('touchstart', function (evt) {
+          return _this.onMouseDown(evt);
+        });
         document.body.addEventListener('mouseup', function (evt) {
+          return _this.onMouseUp(evt);
+        });
+        document.body.addEventListener('touchend', function (evt) {
+          return _this.onMouseUp(evt);
+        });
+        document.body.addEventListener('touchcancel', function (evt) {
           return _this.onMouseUp(evt);
         });
         document.body.addEventListener('mousemove', function (evt) {
           return _this.onMouseMove(evt);
         });
+        document.body.addEventListener('touchmove', function (evt) {
+          return _this.onMouseMove(evt);
+        });
         document.body.addEventListener('dragstart', function () {
           return false;
         });
+      }
+
+      /**
+       * utility method that returns the normalized clintX property of an event
+       *
+       * @param Event evt
+       * @return Float
+       */
+
+    }, {
+      key: 'getClientX',
+      value: function getClientX(evt) {
+        if (typeof evt.clientX !== 'undefined') {
+          return evt.clientX;
+        }
+
+        if (evt.touches[0]) {
+          return evt.touches[0].clientX;
+        }
+
+        return undefined;
       }
 
       /**
@@ -247,8 +280,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           handlerIx: found,
           handler: this.handlerEls[found],
           startLeft: this.handlerEls[found].offsetLeft,
-          startX: evt.clientX
+          startX: this.getClientX(evt)
         };
+
+        console.log(evt, this.dragging);
       }
 
       /**
@@ -274,7 +309,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'onMouseMove',
       value: function onMouseMove(evt) {
         if (this.dragging && this.dragging.handlerIx > -1) {
-          var newLeft = this.dragging.startLeft - (this.dragging.startX - evt.clientX);
+          var newLeft = this.dragging.startLeft - (this.dragging.startX - this.getClientX(evt));
           var percent = this.normalizePercent(this.pxToPercent(newLeft));
           var value = this.percentToValue(percent);
 
