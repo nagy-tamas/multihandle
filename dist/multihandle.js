@@ -282,8 +282,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           startX: this.getClientX(evt)
         };
 
+        evt.target.classList.add('multihandle__handle--active');
         document.body.classList.add('multihandle-disable-drag');
-        console.log(evt, this.dragging);
       }
 
       /**
@@ -294,8 +294,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     }, {
       key: 'onMouseUp',
-      value: function onMouseUp() {
+      value: function onMouseUp(evt) {
         this.dragging = false;
+        evt.target.classList.remove('multihandle__handle--active');
         document.body.classList.remove('multihandle-disable-drag');
       }
 

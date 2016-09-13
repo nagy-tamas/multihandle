@@ -228,8 +228,8 @@
         startX: this.getClientX(evt)
       };
 
+      evt.target.classList.add('multihandle__handle--active');
       document.body.classList.add('multihandle-disable-drag');
-      console.log(evt, this.dragging);
     }
 
     /**
@@ -237,8 +237,9 @@
      *
      * @return undefined
      */
-    onMouseUp() {
+    onMouseUp(evt) {
       this.dragging = false;
+      evt.target.classList.remove('multihandle__handle--active');
       document.body.classList.remove('multihandle-disable-drag');
     }
 
