@@ -11,6 +11,30 @@
     return Math.round(value * inv) / inv;
   }
 
+  function roundToDecimalPlaces(value, places) {
+    const div = Math.pow(10, places);
+    return Math.round(value * div) / div;
+  }
+
+  /**
+   * utility method that returns the normalized clintX property of an event
+   *
+   * @param Event evt
+   * @return Float
+   */
+  function getClientX(evt) {
+    if (typeof evt.clientX !== 'undefined') {
+      return evt.clientX;
+    }
+
+    if (evt.touches[0]) {
+      return evt.touches[0].clientX;
+    }
+
+    return undefined;
+  }
+
+
   class MultiHandle {
     /**
      * Creates the component
@@ -32,12 +56,23 @@
       this.options = Object.assign({
         min: 0,
         max: 100,
-        step: 1,
+        step: 0.5,
+        decimalsAccuracy: 2,
         tpl: {
           track: '${handlers}',
           handler: '${value}'
         }
       }, this.el.dataset, options);
+
+      if (typeof this.options.step === 'string') {
+        this.options.step = parseFloat(this.options.step, 10);
+      }
+
+      this.options.incLittle = typeof this.options.incLittle === 'undefined' ?
+        this.options.step : this.options.incLittle;
+
+      this.options.incBig = typeof this.options.incBig === 'undefined' ?
+        this.options.step * 10 : this.options.incBig;
 
       // normalize values
       this.options.min = parseFloat(this.options.min, 10);
@@ -60,8 +95,8 @@
 
       // creating the component
       this.buildComponent();
-      this.updateHandlers();
-      this.updateLines();
+      this.syncHandlersToInputs();
+      this.syncLinesBetweenHandlers();
 
       // binding events to the component
       this.bindEvents();
@@ -75,9 +110,9 @@
     createHandlers() {
       const self = this;
       return this.handlers.reduce((previous, current) => (
-        `${previous}<div class="multihandle__handle" data-for="${current.name}">
+        `${previous}<a href="javascript:void(0)" class="multihandle__handle">
           ${self.options.tpl.handler}
-        </div>`), ''
+        </a>`), ''
       );
     }
 
@@ -92,22 +127,6 @@
       track.querySelectorAll('.multihandle__handle').forEach((el, ix) => {
         el.inputReference = this.handlers[ix];
         self.handlerEls.push(el);
-      });
-    }
-
-    /**
-     * Update the handlers to reflect the inputs' state
-     *
-     * @return undefined
-     */
-    updateHandlers() {
-      const self = this;
-      self.handlerEls.forEach((el) => {
-        // console.log(self.valueToPercent(parseFloat(el.inputReference.value, 10));
-        const value = parseFloat(el.inputReference.value, 10);
-        const percent = self.valueToPercent(value);
-        el.style.left = `${percent}%`;
-        el.innerHTML = el.innerHTML.replace(/\${value}/, value);
       });
     }
 
@@ -134,24 +153,16 @@
     }
 
     /**
-     * Updating the lines between the handlers for proper sizing
+     * Sets the handler left position to the given percent value
      *
-     * @return undefined
+     * @param Object handler
+     * @param Float percent
      */
-    updateLines() {
-      if (this.handlerEls.length < 2) {
-        return;
-      }
-
-      this.lines.forEach((line) => {
-        const handler1 = parseFloat(line.lineTo.style.left, 10);
-        const handler2 = parseFloat(line.lineFrom.style.left, 10);
-        const left = Math.min(handler1, handler2);
-        const width = Math.abs(handler1 - handler2);
-
-        line.style.left = `${left}%`;
-        line.style.width = `${width}%`;
-      });
+    setHandlerPos(handler, percent) {
+      const value = this.percentToValue(percent);
+      handler.style.left = `${percent}%`;
+      handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
+      this.syncLinesBetweenHandlers();
     }
 
     /**
@@ -188,24 +199,10 @@
       document.body.addEventListener('touchcancel', evt => this.onMouseUp(evt));
       document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
       document.body.addEventListener('touchmove', evt => this.onMouseMove(evt));
-    }
 
-    /**
-     * utility method that returns the normalized clintX property of an event
-     *
-     * @param Event evt
-     * @return Float
-     */
-    getClientX(evt) {
-      if (typeof evt.clientX !== 'undefined') {
-        return evt.clientX;
-      }
-
-      if (evt.touches[0]) {
-        return evt.touches[0].clientX;
-      }
-
-      return undefined;
+      this.handlerEls.forEach((handle) => {
+        handle.addEventListener('keydown', evt => this.onHandlerKeyDown(evt));
+      });
     }
 
     /**
@@ -225,7 +222,7 @@
         handlerIx: found,
         handler: this.handlerEls[found],
         startLeft: this.handlerEls[found].offsetLeft,
-        startX: this.getClientX(evt)
+        startX: getClientX(evt)
       };
 
       this.dragging.handler.classList.add('multihandle__handle--active');
@@ -254,15 +251,102 @@
      */
     onMouseMove(evt) {
       if (this.dragging && this.dragging.handlerIx > -1) {
-        const newLeft = this.dragging.startLeft - (this.dragging.startX - this.getClientX(evt));
-        const percent = this.normalizePercent(this.pxToPercent(newLeft));
-        const value = this.percentToValue(percent);
+        const newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
+        const percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
-        this.dragging.handler.style.left = `${percent}%`;
-        this.dragging.handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
-        this.updateInputs();
-        this.updateLines();
+        this.setPercentValue(this.dragging.handler, percent);
       }
+    }
+
+    /**
+     * Sets a handler's value
+     *
+     * @param Object handler
+     * @param Float value
+     * @return
+     *
+     */
+    setHandlerValue(handler, value) {
+      value = this.normalizeValue(value);
+      const percent = this.valueToPercent(value);
+      handler.inputReference.value = value;
+      this.setHandlerPos(handler, percent);
+    }
+
+    /**
+     * Sets a handler's value as percent plus updates the related input
+     *
+     * Object handler
+     * Float percent
+     */
+    setPercentValue(handler, percent) {
+      const value = this.percentToValue(percent);
+      this.setHandlerValue(handler, value);
+    }
+
+    onHandlerKeyDown(evt) {
+      switch (evt.keyCode) {
+        case 38: // up
+          this.incByBig(evt.target);
+          evt.preventDefault();
+          break;
+        case 40: // down
+          this.descByBig(evt.target);
+          evt.preventDefault();
+          break;
+        case 39: // right
+          this.incByLittle(evt.target);
+          evt.preventDefault();
+          break;
+        case 37: // left
+          this.descByLittle(evt.target);
+          evt.preventDefault();
+          break;
+        default:
+      }
+    }
+
+    incByLittle(handler) {
+      this.setHandlerValue(
+        handler,
+        parseFloat(handler.inputReference.value, 10) + this.options.incLittle
+      );
+    }
+
+    descByLittle(handler) {
+      this.setHandlerValue(
+        handler,
+        parseFloat(handler.inputReference.value, 10) - this.options.incLittle
+      );
+    }
+
+    incByBig(handler) {
+      this.setHandlerValue(
+        handler,
+        parseFloat(handler.inputReference.value, 10) + this.options.incBig
+      );
+    }
+
+    descByBig(handler) {
+      this.setHandlerValue(
+        handler,
+        parseFloat(handler.inputReference.value, 10) - this.options.incBig
+      );
+    }
+
+    /**
+     * Update the handlers to reflect the inputs' state
+     *
+     * @return undefined
+     */
+    syncHandlersToInputs() {
+      const self = this;
+      self.handlerEls.forEach((el) => {
+        const value = parseFloat(el.inputReference.value, 10);
+        const percent = self.valueToPercent(value);
+        el.style.left = `${percent}%`;
+        el.innerHTML = el.innerHTML.replace(/\${value}/, value);
+      });
     }
 
     /**
@@ -270,12 +354,33 @@
      *
      * @return undefined
      */
-    updateInputs() {
+    syncInputsToHandlers() {
       const self = this;
 
       this.handlerEls.forEach((handler) => {
         const input = handler.inputReference;
         input.value = self.percentToValue(parseFloat(handler.style.left, 10));
+      });
+    }
+
+    /**
+     * Updating the lines between the handlers for proper sizing
+     *
+     * @return undefined
+     */
+    syncLinesBetweenHandlers() {
+      if (this.handlerEls.length < 2) {
+        return;
+      }
+
+      this.lines.forEach((line) => {
+        const handler1 = parseFloat(line.lineTo.style.left, 10);
+        const handler2 = parseFloat(line.lineFrom.style.left, 10);
+        const left = Math.min(handler1, handler2);
+        const width = Math.abs(handler1 - handler2);
+
+        line.style.left = `${left}%`;
+        line.style.width = `${width}%`;
       });
     }
 
@@ -296,7 +401,7 @@
      * @param  float px
      * @return float percent
      */
-    pxToPercent(px) {
+    pixelToPercent(px) {
       const full = this.container.scrollWidth;
       return (px / full) * 100;
     }
@@ -316,12 +421,34 @@
       return rounded;
     }
 
+    /**
+     * Squeezes the percent value between 0 and 100
+     *
+     * @param Float percent
+     */
     normalizePercent(percent) {
+      // limit the percentage between 0 and 100
       percent = Math.max(0, percent);
       percent = Math.min(100, percent);
 
+      // converts percent to value, keeping mind the min/max value limits
+      // then convert it back to percent
       return this.valueToPercent(this.percentToValue(percent));
     }
+
+    /**
+     * Squeezes the value between the min and max limits
+     *
+     * @param Float value
+     */
+    normalizeValue(value) {
+      // limit the percentage between 0 and 100
+      value = Math.max(this.options.min, value);
+      value = Math.min(this.options.max, value);
+      value = roundToDecimalPlaces(value, this.options.decimalsAccuracy);
+      return value;
+    }
+
   }
 
   /**

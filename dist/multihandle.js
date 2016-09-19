@@ -17,6 +17,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return Math.round(value * inv) / inv;
   }
 
+  function roundToDecimalPlaces(value, places) {
+    var div = Math.pow(10, places);
+    return Math.round(value * div) / div;
+  }
+
+  /**
+   * utility method that returns the normalized clintX property of an event
+   *
+   * @param Event evt
+   * @return Float
+   */
+  function getClientX(evt) {
+    if (typeof evt.clientX !== 'undefined') {
+      return evt.clientX;
+    }
+
+    if (evt.touches[0]) {
+      return evt.touches[0].clientX;
+    }
+
+    return undefined;
+  }
+
   var MultiHandle = function () {
     /**
      * Creates the component
@@ -42,12 +65,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.options = Object.assign({
         min: 0,
         max: 100,
-        step: 1,
+        step: 0.5,
+        decimalsAccuracy: 2,
         tpl: {
           track: '${handlers}',
           handler: '${value}'
         }
       }, this.el.dataset, options);
+
+      if (typeof this.options.step === 'string') {
+        this.options.step = parseFloat(this.options.step, 10);
+      }
+
+      this.options.incLittle = typeof this.options.incLittle === 'undefined' ? this.options.step : this.options.incLittle;
+
+      this.options.incBig = typeof this.options.incBig === 'undefined' ? this.options.step * 10 : this.options.incBig;
 
       // normalize values
       this.options.min = parseFloat(this.options.min, 10);
@@ -70,8 +102,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       // creating the component
       this.buildComponent();
-      this.updateHandlers();
-      this.updateLines();
+      this.syncHandlersToInputs();
+      this.syncLinesBetweenHandlers();
 
       // binding events to the component
       this.bindEvents();
@@ -89,7 +121,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function createHandlers() {
         var self = this;
         return this.handlers.reduce(function (previous, current) {
-          return previous + '<div class="multihandle__handle" data-for="' + current.name + '">\n          ' + self.options.tpl.handler + '\n        </div>';
+          return previous + '<a href="javascript:void(0)" class="multihandle__handle">\n          ' + self.options.tpl.handler + '\n        </a>';
         }, '');
       }
 
@@ -109,25 +141,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         track.querySelectorAll('.multihandle__handle').forEach(function (el, ix) {
           el.inputReference = _this.handlers[ix];
           self.handlerEls.push(el);
-        });
-      }
-
-      /**
-       * Update the handlers to reflect the inputs' state
-       *
-       * @return undefined
-       */
-
-    }, {
-      key: 'updateHandlers',
-      value: function updateHandlers() {
-        var self = this;
-        self.handlerEls.forEach(function (el) {
-          // console.log(self.valueToPercent(parseFloat(el.inputReference.value, 10));
-          var value = parseFloat(el.inputReference.value, 10);
-          var percent = self.valueToPercent(value);
-          el.style.left = percent + '%';
-          el.innerHTML = el.innerHTML.replace(/\${value}/, value);
         });
       }
 
@@ -157,27 +170,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       /**
-       * Updating the lines between the handlers for proper sizing
+       * Sets the handler left position to the given percent value
        *
-       * @return undefined
+       * @param Object handler
+       * @param Float percent
        */
 
     }, {
-      key: 'updateLines',
-      value: function updateLines() {
-        if (this.handlerEls.length < 2) {
-          return;
-        }
-
-        this.lines.forEach(function (line) {
-          var handler1 = parseFloat(line.lineTo.style.left, 10);
-          var handler2 = parseFloat(line.lineFrom.style.left, 10);
-          var left = Math.min(handler1, handler2);
-          var width = Math.abs(handler1 - handler2);
-
-          line.style.left = left + '%';
-          line.style.width = width + '%';
-        });
+      key: 'setHandlerPos',
+      value: function setHandlerPos(handler, percent) {
+        var value = this.percentToValue(percent);
+        handler.style.left = percent + '%';
+        handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
+        this.syncLinesBetweenHandlers();
       }
 
       /**
@@ -236,27 +241,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         document.body.addEventListener('touchmove', function (evt) {
           return _this2.onMouseMove(evt);
         });
-      }
 
-      /**
-       * utility method that returns the normalized clintX property of an event
-       *
-       * @param Event evt
-       * @return Float
-       */
-
-    }, {
-      key: 'getClientX',
-      value: function getClientX(evt) {
-        if (typeof evt.clientX !== 'undefined') {
-          return evt.clientX;
-        }
-
-        if (evt.touches[0]) {
-          return evt.touches[0].clientX;
-        }
-
-        return undefined;
+        this.handlerEls.forEach(function (handle) {
+          handle.addEventListener('keydown', function (evt) {
+            return _this2.onHandlerKeyDown(evt);
+          });
+        });
       }
 
       /**
@@ -279,7 +269,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           handlerIx: found,
           handler: this.handlerEls[found],
           startLeft: this.handlerEls[found].offsetLeft,
-          startX: this.getClientX(evt)
+          startX: getClientX(evt)
         };
 
         this.dragging.handler.classList.add('multihandle__handle--active');
@@ -314,15 +304,108 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'onMouseMove',
       value: function onMouseMove(evt) {
         if (this.dragging && this.dragging.handlerIx > -1) {
-          var newLeft = this.dragging.startLeft - (this.dragging.startX - this.getClientX(evt));
-          var percent = this.normalizePercent(this.pxToPercent(newLeft));
-          var value = this.percentToValue(percent);
+          var newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
+          var percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
-          this.dragging.handler.style.left = percent + '%';
-          this.dragging.handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
-          this.updateInputs();
-          this.updateLines();
+          this.setPercentValue(this.dragging.handler, percent);
         }
+      }
+
+      /**
+       * Sets a handler's value
+       *
+       * @param Object handler
+       * @param Float value
+       * @return
+       *
+       */
+
+    }, {
+      key: 'setHandlerValue',
+      value: function setHandlerValue(handler, value) {
+        value = this.normalizeValue(value);
+        var percent = this.valueToPercent(value);
+        handler.inputReference.value = value;
+        this.setHandlerPos(handler, percent);
+      }
+
+      /**
+       * Sets a handler's value as percent plus updates the related input
+       *
+       * Object handler
+       * Float percent
+       */
+
+    }, {
+      key: 'setPercentValue',
+      value: function setPercentValue(handler, percent) {
+        var value = this.percentToValue(percent);
+        this.setHandlerValue(handler, value);
+      }
+    }, {
+      key: 'onHandlerKeyDown',
+      value: function onHandlerKeyDown(evt) {
+        switch (evt.keyCode) {
+          case 38:
+            // up
+            this.incByBig(evt.target);
+            evt.preventDefault();
+            break;
+          case 40:
+            // down
+            this.descByBig(evt.target);
+            evt.preventDefault();
+            break;
+          case 39:
+            // right
+            this.incByLittle(evt.target);
+            evt.preventDefault();
+            break;
+          case 37:
+            // left
+            this.descByLittle(evt.target);
+            evt.preventDefault();
+            break;
+          default:
+        }
+      }
+    }, {
+      key: 'incByLittle',
+      value: function incByLittle(handler) {
+        this.setHandlerValue(handler, parseFloat(handler.inputReference.value, 10) + this.options.incLittle);
+      }
+    }, {
+      key: 'descByLittle',
+      value: function descByLittle(handler) {
+        this.setHandlerValue(handler, parseFloat(handler.inputReference.value, 10) - this.options.incLittle);
+      }
+    }, {
+      key: 'incByBig',
+      value: function incByBig(handler) {
+        this.setHandlerValue(handler, parseFloat(handler.inputReference.value, 10) + this.options.incBig);
+      }
+    }, {
+      key: 'descByBig',
+      value: function descByBig(handler) {
+        this.setHandlerValue(handler, parseFloat(handler.inputReference.value, 10) - this.options.incBig);
+      }
+
+      /**
+       * Update the handlers to reflect the inputs' state
+       *
+       * @return undefined
+       */
+
+    }, {
+      key: 'syncHandlersToInputs',
+      value: function syncHandlersToInputs() {
+        var self = this;
+        self.handlerEls.forEach(function (el) {
+          var value = parseFloat(el.inputReference.value, 10);
+          var percent = self.valueToPercent(value);
+          el.style.left = percent + '%';
+          el.innerHTML = el.innerHTML.replace(/\${value}/, value);
+        });
       }
 
       /**
@@ -332,13 +415,37 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'updateInputs',
-      value: function updateInputs() {
+      key: 'syncInputsToHandlers',
+      value: function syncInputsToHandlers() {
         var self = this;
 
         this.handlerEls.forEach(function (handler) {
           var input = handler.inputReference;
           input.value = self.percentToValue(parseFloat(handler.style.left, 10));
+        });
+      }
+
+      /**
+       * Updating the lines between the handlers for proper sizing
+       *
+       * @return undefined
+       */
+
+    }, {
+      key: 'syncLinesBetweenHandlers',
+      value: function syncLinesBetweenHandlers() {
+        if (this.handlerEls.length < 2) {
+          return;
+        }
+
+        this.lines.forEach(function (line) {
+          var handler1 = parseFloat(line.lineTo.style.left, 10);
+          var handler2 = parseFloat(line.lineFrom.style.left, 10);
+          var left = Math.min(handler1, handler2);
+          var width = Math.abs(handler1 - handler2);
+
+          line.style.left = left + '%';
+          line.style.width = width + '%';
         });
       }
 
@@ -364,8 +471,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'pxToPercent',
-      value: function pxToPercent(px) {
+      key: 'pixelToPercent',
+      value: function pixelToPercent(px) {
         var full = this.container.scrollWidth;
         return px / full * 100;
       }
@@ -387,13 +494,39 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return rounded;
       }
+
+      /**
+       * Squeezes the percent value between 0 and 100
+       *
+       * @param Float percent
+       */
+
     }, {
       key: 'normalizePercent',
       value: function normalizePercent(percent) {
+        // limit the percentage between 0 and 100
         percent = Math.max(0, percent);
         percent = Math.min(100, percent);
 
+        // converts percent to value, keeping mind the min/max value limits
+        // then convert it back to percent
         return this.valueToPercent(this.percentToValue(percent));
+      }
+
+      /**
+       * Squeezes the value between the min and max limits
+       *
+       * @param Float value
+       */
+
+    }, {
+      key: 'normalizeValue',
+      value: function normalizeValue(value) {
+        // limit the percentage between 0 and 100
+        value = Math.max(this.options.min, value);
+        value = Math.min(this.options.max, value);
+        value = roundToDecimalPlaces(value, this.options.decimalsAccuracy);
+        return value;
       }
     }]);
 
