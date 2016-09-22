@@ -40,6 +40,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return undefined;
   }
 
+  /**
+   * utility function to create events
+   *
+   * @param String kind
+   * @return Event
+   */
+  function newEvent(kind, options) {
+    var evt = document.createEvent('HTMLEvents');
+    if (typeof Event === 'function') {
+      options = options || {
+        view: window,
+        bubbles: true,
+        cancelable: true
+      };
+      return new Event(kind, options);
+    }
+    evt.initEvent('kind', true, true);
+    return evt;
+  }
+
   var MultiHandle = function () {
     /**
      * Creates the component
@@ -326,6 +346,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         value = this.normalizeValue(value);
         var percent = this.valueToPercent(value);
         handler.inputReference.value = value;
+        handler.inputReference.dispatchEvent(newEvent('input'));
         this.setHandlerPos(handler, percent);
       }
 
