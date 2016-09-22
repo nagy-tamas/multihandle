@@ -43,10 +43,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   /**
    * utility function to create events
    *
-   * @param String kind
+   * @param String type
    * @return Event
    */
-  function newEvent(kind, options) {
+  function newEvent(type, options) {
     var evt = document.createEvent('HTMLEvents');
     if (typeof Event === 'function') {
       options = options || {
@@ -54,9 +54,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         bubbles: true,
         cancelable: true
       };
-      return new Event(kind, options);
+      return new Event(type, options);
     }
-    evt.initEvent('kind', true, true);
+    evt.initEvent(type, true, true);
     return evt;
   }
 
