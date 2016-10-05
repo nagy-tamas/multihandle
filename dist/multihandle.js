@@ -23,6 +23,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /**
+   * Because safari needs it for the Object.assign
+   *
+   * @param      DOMStringMap map
+   */
+  function domStringMapToObj(map) {
+    var obj = {};
+    Object.keys(map).forEach(function (key) {
+      obj[key] = map[key];
+    });
+    return obj;
+  }
+
+  /**
    * utility method that returns the normalized clintX property of an event
    *
    * @param Event evt
@@ -91,7 +104,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           track: '${handlers}',
           handler: '${value}'
         }
-      }, this.el.dataset, options);
+      }, domStringMapToObj(this.el.dataset), options);
 
       if (typeof this.options.step === 'string') {
         this.options.step = parseFloat(this.options.step, 10);
@@ -158,7 +171,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var _this = this;
 
         var self = this;
-        track.querySelectorAll('.multihandle__handle').forEach(function (el, ix) {
+        Array.prototype.forEach.call(track.querySelectorAll('.multihandle__handle'), function (el, ix) {
           el.inputReference = _this.handlers[ix];
           self.handlerEls.push(el);
         });

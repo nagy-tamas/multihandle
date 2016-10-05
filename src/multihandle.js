@@ -17,6 +17,19 @@
   }
 
   /**
+   * Because safari needs it for the Object.assign
+   *
+   * @param      DOMStringMap map
+   */
+  function domStringMapToObj(map) {
+    const obj = {};
+    Object.keys(map).forEach((key) => {
+      obj[key] = map[key];
+    });
+    return obj;
+  }
+
+  /**
    * utility method that returns the normalized clintX property of an event
    *
    * @param Event evt
@@ -81,7 +94,7 @@
           track: '${handlers}',
           handler: '${value}'
         }
-      }, this.el.dataset, options);
+      }, domStringMapToObj(this.el.dataset), options);
 
       if (typeof this.options.step === 'string') {
         this.options.step = parseFloat(this.options.step, 10);
@@ -143,7 +156,7 @@
      */
     findHandlers(track) {
       const self = this;
-      track.querySelectorAll('.multihandle__handle').forEach((el, ix) => {
+      Array.prototype.forEach.call(track.querySelectorAll('.multihandle__handle'), (el, ix) => {
         el.inputReference = this.handlers[ix];
         self.handlerEls.push(el);
       });
