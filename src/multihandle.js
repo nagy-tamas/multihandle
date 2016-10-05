@@ -34,6 +34,25 @@
     return undefined;
   }
 
+  /**
+   * utility function to create events
+   *
+   * @param String type
+   * @return Event
+   */
+  function newEvent(type, options) {
+    const evt = document.createEvent('HTMLEvents');
+    if (typeof Event === 'function') {
+      options = options || {
+        view: window,
+        bubbles: true,
+        cancelable: true
+      };
+      return new Event(type, options);
+    }
+    evt.initEvent(type, true, true);
+    return evt;
+  }
 
   class MultiHandle {
     /**
@@ -270,6 +289,7 @@
       value = this.normalizeValue(value);
       const percent = this.valueToPercent(value);
       handler.inputReference.value = value;
+      handler.inputReference.dispatchEvent(newEvent('input'));
       this.setHandlerPos(handler, percent);
     }
 
