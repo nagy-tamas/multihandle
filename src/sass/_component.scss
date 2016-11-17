@@ -37,6 +37,15 @@
   background: $multihandle-line-color;
 }
 
+.multihandle__snappingpoint {
+  position: absolute;
+  width: 1px;
+  height: 5px;
+  border-right: 1px solid black;
+  text-indent: -999em;
+  overflow: hidden;
+}
+
 body.multihandle-disable-drag {
   user-select: none;
 }

@@ -90,11 +90,15 @@
         max: 100,
         step: 0.5,
         decimalsAccuracy: 2,
+        gfx: '',
         tpl: {
           track: '${handlers}',
-          handler: '${value}'
+          handler: '${value}',
+          snappingpoint: '${value}'
         }
       }, domStringMapToObj(this.el.dataset), options);
+
+      this.options.gfx = this.options.gfx.split(',');
 
       if (typeof this.options.step === 'string') {
         this.options.step = parseFloat(this.options.step, 10);
@@ -185,6 +189,51 @@
     }
 
     /**
+     * Creates visible, styleable snapping points
+     *
+     * @return undefined
+     */
+    createSnappingPoints(track) {
+      this.snappingMap.forEach((data, ix) => {
+        const snap = document.createElement('span');
+        snap.className = 'multihandle__snappingpoint';
+        track.appendChild(snap);
+        snap.innerHTML = this.options.tpl.snappingpoint.replace(/\${value}/, data[0]);
+        snap.style.left = `${data[1]}%`;
+      });
+    }
+
+    /**
+     * Creates a snapping map.
+     *
+     * @return array
+     */
+    createSnappingMap() {
+      const valLength = Math.abs(this.options.max - this.options.min);
+      const steps = valLength / this.options.step;
+      const snaps = [];
+
+      for (let ix = 0; ix <= steps; ix++) {
+        // avoiding floating point math "bugs"
+        const currVal = roundToDecimalPlaces(ix * this.options.step, 6);
+        // first number: value, second: percent (for display purposes)
+        snaps.push([this.options.min + currVal,
+          roundToDecimalPlaces((currVal / valLength) * 100, 2)]);
+      }
+
+      return snaps;
+    }
+
+    /**
+     * Is snapping enabled or not?
+     *
+     * @return boolean
+     */
+    isItSnaps() {
+      return this.options.step !== 0;
+    }
+
+    /**
      * Sets the handler left position to the given percent value
      *
      * @param Object handler
@@ -213,6 +262,14 @@
       this.findHandlers(track);
 
       this.createLines(track);
+
+      if (this.isItSnaps()) {
+        this.snappingMap = this.createSnappingMap();
+
+        if (this.options.gfx.indexOf('snappingpoints') > -1) {
+          this.createSnappingPoints(track);
+        }
+      }
 
       // putting the whole component in the container
       this.container.appendChild(track);
@@ -491,6 +548,16 @@
    * @return undefined
    */
   const init = (els) => {
+    // querySelectorAll -> Array
+    if (els instanceof NodeList) {
+      els = Array.prototype.slice.call(els);
+    }
+
+    // single element -> [element]  (so we can forEach it)
+    if (!(els instanceof Array)) {
+      els = [els];
+    }
+
     els.forEach((el) => {
       return new MultiHandle(el);
     });
@@ -499,6 +566,7 @@
   /**
    * Exported API in the window namespace
    */
+  window.multihandle = MultiHandle;
   window.multihandle = {
     init
   };

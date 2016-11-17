@@ -100,11 +100,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         max: 100,
         step: 0.5,
         decimalsAccuracy: 2,
+        gfx: '',
         tpl: {
           track: '${handlers}',
-          handler: '${value}'
+          handler: '${value}',
+          snappingpoint: '${value}'
         }
       }, domStringMapToObj(this.el.dataset), options);
+
+      this.options.gfx = this.options.gfx.split(',');
 
       if (typeof this.options.step === 'string') {
         this.options.step = parseFloat(this.options.step, 10);
@@ -203,6 +207,61 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       /**
+       * Creates visible, styleable snapping points
+       *
+       * @return undefined
+       */
+
+    }, {
+      key: 'createSnappingPoints',
+      value: function createSnappingPoints(track) {
+        var _this2 = this;
+
+        this.snappingMap.forEach(function (data, ix) {
+          var snap = document.createElement('span');
+          snap.className = 'multihandle__snappingpoint';
+          track.appendChild(snap);
+          snap.innerHTML = _this2.options.tpl.snappingpoint.replace(/\${value}/, data[0]);
+          snap.style.left = data[1] + '%';
+        });
+      }
+
+      /**
+       * Creates a snapping map.
+       *
+       * @return array
+       */
+
+    }, {
+      key: 'createSnappingMap',
+      value: function createSnappingMap() {
+        var valLength = Math.abs(this.options.max - this.options.min);
+        var steps = valLength / this.options.step;
+        var snaps = [];
+
+        for (var ix = 0; ix <= steps; ix++) {
+          // avoiding floating point math "bugs"
+          var currVal = roundToDecimalPlaces(ix * this.options.step, 6);
+          // first number: value, second: percent (for display purposes)
+          snaps.push([this.options.min + currVal, roundToDecimalPlaces(currVal / valLength * 100, 2)]);
+        }
+
+        return snaps;
+      }
+
+      /**
+       * Is snapping enabled or not?
+       *
+       * @return boolean
+       */
+
+    }, {
+      key: 'isItSnaps',
+      value: function isItSnaps() {
+        return this.options.step !== 0;
+      }
+
+      /**
        * Sets the handler left position to the given percent value
        *
        * @param Object handler
@@ -238,6 +297,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         this.createLines(track);
 
+        if (this.isItSnaps()) {
+          this.snappingMap = this.createSnappingMap();
+
+          if (this.options.gfx.indexOf('snappingpoints') > -1) {
+            this.createSnappingPoints(track);
+          }
+        }
+
         // putting the whole component in the container
         this.container.appendChild(track);
       }
@@ -251,33 +318,33 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'bindEvents',
       value: function bindEvents() {
-        var _this2 = this;
+        var _this3 = this;
 
         this.container.addEventListener('mousedown', function (evt) {
-          return _this2.onMouseDown(evt);
+          return _this3.onMouseDown(evt);
         });
         this.container.addEventListener('touchstart', function (evt) {
-          return _this2.onMouseDown(evt);
+          return _this3.onMouseDown(evt);
         });
         document.body.addEventListener('mouseup', function (evt) {
-          return _this2.onMouseUp(evt);
+          return _this3.onMouseUp(evt);
         });
         document.body.addEventListener('touchend', function (evt) {
-          return _this2.onMouseUp(evt);
+          return _this3.onMouseUp(evt);
         });
         document.body.addEventListener('touchcancel', function (evt) {
-          return _this2.onMouseUp(evt);
+          return _this3.onMouseUp(evt);
         });
         document.body.addEventListener('mousemove', function (evt) {
-          return _this2.onMouseMove(evt);
+          return _this3.onMouseMove(evt);
         });
         document.body.addEventListener('touchmove', function (evt) {
-          return _this2.onMouseMove(evt);
+          return _this3.onMouseMove(evt);
         });
 
         this.handlerEls.forEach(function (handle) {
           handle.addEventListener('keydown', function (evt) {
-            return _this2.onHandlerKeyDown(evt);
+            return _this3.onHandlerKeyDown(evt);
           });
         });
       }
@@ -576,6 +643,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
   var init = function init(els) {
+    // querySelectorAll -> Array
+    if (els instanceof NodeList) {
+      els = Array.prototype.slice.call(els);
+    }
+
+    // single element -> [element]  (so we can forEach it)
+    if (!(els instanceof Array)) {
+      els = [els];
+    }
+
     els.forEach(function (el) {
       return new MultiHandle(el);
     });
@@ -584,6 +661,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   /**
    * Exported API in the window namespace
    */
+  window.multihandle = MultiHandle;
   window.multihandle = {
     init: init
   };
