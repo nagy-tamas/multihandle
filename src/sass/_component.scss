@@ -40,8 +40,8 @@
 .multihandle__snappingpoint {
   position: absolute;
   width: 1px;
-  height: 5px;
-  border-right: 1px solid black;
+  height: $multihandle-snap-height;
+  border-right: 1px solid $multihandle-snap-color;
   text-indent: -999em;
   overflow: hidden;
 }
