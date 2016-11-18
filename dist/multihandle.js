@@ -217,10 +217,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function createSnappingPoints(track) {
         var _this2 = this;
 
+        var snaps = document.createElement('div');
+        snaps.className = 'multihandle__snappingpoints';
+        track.appendChild(snaps);
+
         this.snappingMap.forEach(function (data, ix) {
           var snap = document.createElement('span');
           snap.className = 'multihandle__snappingpoint';
-          track.appendChild(snap);
+          snaps.appendChild(snap);
           snap.innerHTML = _this2.options.tpl.snappingpoint.replace(/\${value}/, data[0]);
           snap.style.left = data[1] + '%';
         });

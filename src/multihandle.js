@@ -194,10 +194,14 @@
      * @return undefined
      */
     createSnappingPoints(track) {
+      const snaps = document.createElement('div');
+      snaps.className = 'multihandle__snappingpoints';
+      track.appendChild(snaps);
+
       this.snappingMap.forEach((data, ix) => {
         const snap = document.createElement('span');
         snap.className = 'multihandle__snappingpoint';
-        track.appendChild(snap);
+        snaps.appendChild(snap);
         snap.innerHTML = this.options.tpl.snappingpoint.replace(/\${value}/, data[0]);
         snap.style.left = `${data[1]}%`;
       });
