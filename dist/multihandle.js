@@ -17,6 +17,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return Math.round(value * inv) / inv;
   }
 
+  /**
+   * Trims down the unnecessary decimals
+   *
+   * @param      {number}  value   The value
+   * @param      {<type>}  places  The places
+   * @return     {<type>}  { description_of_the_return_value }
+   */
   function roundToDecimalPlaces(value, places) {
     var div = Math.pow(10, places);
     return Math.round(value * div) / div;
@@ -94,34 +101,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // removing the "loading" state - show component
       this.el.className = el.className.replace(/multihandle--loading/g, '');
 
-      // default options
-      this.options = Object.assign({
-        min: 0,
-        max: 100,
-        step: 0.5,
-        decimalsAccuracy: 2,
-        gfx: '',
-        tpl: {
-          track: '${handlers}',
-          handler: '${value}',
-          snappingpoint: '${value}'
-        }
-      }, domStringMapToObj(this.el.dataset), options);
+      this.options = this.parseOptions(options);
 
-      this.options.gfx = this.options.gfx.split(',');
-
-      if (typeof this.options.step === 'string') {
-        this.options.step = parseFloat(this.options.step, 10);
-      }
-
-      this.options.incLittle = typeof this.options.incLittle === 'undefined' ? this.options.step : this.options.incLittle;
-
-      this.options.incBig = typeof this.options.incBig === 'undefined' ? this.options.step * 10 : this.options.incBig;
-
-      // normalize values
-      this.options.min = parseFloat(this.options.min, 10);
-      this.options.max = parseFloat(this.options.max, 10);
-      this.options.step = parseFloat(this.options.step, 10);
+      // for non-linear, or value/label scales
+      this.dataset = null;
 
       // are we dragging something?
       this.dragging = false;
@@ -133,7 +116,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       // reference to the original handlers, converted to an array
-      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input'));
+      this.handlers = [];
       this.handlerEls = [];
       this.lines = [];
 
@@ -147,19 +130,108 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     /**
-     * Creates the DOM string of the handlers we can inject in the HTML.
+     * Creates the this.options, based on the default and the given values
      *
-     * @return string The handlers
+     * Plus normalizes some flags/variables
+     *
+     * @param      Object    options   The option argument of the constructor
+     * @return     Object    The merged, final option object
      */
 
 
     _createClass(MultiHandle, [{
+      key: 'parseOptions',
+      value: function parseOptions(options) {
+        // default options
+        var opts = Object.assign({
+          min: 0,
+          max: 100,
+          step: 0.5,
+          decimalsAccuracy: 2,
+          gfx: '',
+          tpl: {
+            track: '${handlers}',
+            handler: '${value}',
+            snappingpoint: '${value}'
+          }
+        }, domStringMapToObj(this.el.dataset), options);
+
+        opts.gfx = opts.gfx.split(',');
+
+        opts.dataset = !!opts.dataset;
+
+        if (opts.dataset) {
+          opts.min = 0;
+          opts.step = 1;
+        }
+
+        if (typeof opts.step === 'string') {
+          opts.step = parseFloat(opts.step, 10);
+        }
+
+        opts.incLittle = typeof opts.incLittle === 'undefined' ? opts.step : opts.incLittle;
+
+        opts.incBig = typeof opts.incBig === 'undefined' ? opts.step * 10 : opts.incBig;
+
+        // normalize values
+        opts.min = parseFloat(opts.min, 10);
+        opts.max = parseFloat(opts.max, 10);
+        opts.step = parseFloat(opts.step, 10);
+
+        console.log(opts);
+        return opts;
+      }
+
+      /**
+       * Creates the DOM string of the handlers we can inject in the HTML.
+       *
+       * @return string The handlers
+       */
+
+    }, {
       key: 'createHandlers',
       value: function createHandlers() {
         var self = this;
         return this.handlers.reduce(function (previous, current) {
           return previous + '<a href="javascript:void(0)" class="multihandle__handle">\n          ' + self.options.tpl.handler + '\n        </a>';
         }, '');
+      }
+
+      /**
+       * Creates a dataset from the given select tag
+       *
+       * @param    DOMNode  select
+       * @return   Array
+       */
+
+    }, {
+      key: 'createDataset',
+      value: function createDataset(select) {
+        var dataset = [];
+        for (var ix = 0; ix <= select.options.length - 1; ix++) {
+          dataset.push({
+            value: select.options[ix].value,
+            label: select.options[ix].text
+          });
+        }
+
+        return dataset;
+      }
+
+      /**
+       * Find the native input elements in the component
+       */
+
+    }, {
+      key: 'findInputs',
+      value: function findInputs() {
+        if (this.options.dataset) {
+          this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('select'));
+          this.dataset = this.createDataset(this.handlers[0]);
+          this.options.max = this.handlers[0].options.length - 1;
+        } else {
+          this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input'));
+        }
       }
 
       /**
@@ -296,6 +368,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.container.appendChild(track);
 
         // putting the handlers on the track
+        this.findInputs();
         track.innerHTML = this.options.tpl.track.replace(/\${handlers}/, this.createHandlers());
         this.findHandlers(track);
 
@@ -350,6 +423,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           handle.addEventListener('keydown', function (evt) {
             return _this3.onHandlerKeyDown(evt);
           });
+          // stops link dragging - won't work with addEventListener!
+          handle.ondragstart = function (evt) {
+            return false;
+          };
         });
       }
 
@@ -411,7 +488,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
           var percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
-          this.setPercentValue(this.dragging.handler, percent);
+          if (this.dataset) {
+            this.setDatasetAsPercent(this.dragging.handler, percent);
+          } else {
+            this.setValueAsPercent(this.dragging.handler, percent);
+          }
         }
       }
 
@@ -442,11 +523,34 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'setPercentValue',
-      value: function setPercentValue(handler, percent) {
+      key: 'setValueAsPercent',
+      value: function setValueAsPercent(handler, percent) {
         var value = this.percentToValue(percent);
         this.setHandlerValue(handler, value);
       }
+
+      /**
+       * Find a value in the dataset by a percent instead of an index.
+       *
+       * @param      {<type>}  handler  The handler
+       * @param      {<type>}  percent  The percent
+       */
+
+    }, {
+      key: 'setDatasetAsPercent',
+      value: function setDatasetAsPercent(handler, percent) {
+        var ix = this.percentToValue(percent);
+        var data = this.dataset[ix];
+        this.setHandlerValue(handler, data.value);
+        console.log(data);
+      }
+
+      /**
+       * Handling the keystrokes
+       *
+       * @param      Event  evt
+       */
+
     }, {
       key: 'onHandlerKeyDown',
       value: function onHandlerKeyDown(evt) {
@@ -581,6 +685,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var full = this.container.scrollWidth;
         return px / full * 100;
       }
+    }, {
+      key: 'percentToIndex',
+      value: function percentToIndex(percent) {
+        var scale = this.options.max - this.options.min;
+        // before rounding to options.step
+        var rawValue = percent / (100 / scale);
+        return rawValue;
+      }
 
       /**
        * Gives back the value based on the current handler position
@@ -594,7 +706,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function percentToValue(percent) {
         var scale = this.options.max - this.options.min;
         // before rounding to options.step
-        var rawValue = percent / (100 / scale) + this.options.min;
+        var rawValue = this.percentToIndex() + this.options.min;
         var rounded = round(rawValue, this.options.step);
 
         return rounded;

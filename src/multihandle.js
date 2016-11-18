@@ -11,6 +11,13 @@
     return Math.round(value * inv) / inv;
   }
 
+  /**
+   * Trims down the unnecessary decimals
+   *
+   * @param      {number}  value   The value
+   * @param      {<type>}  places  The places
+   * @return     {<type>}  { description_of_the_return_value }
+   */
   function roundToDecimalPlaces(value, places) {
     const div = Math.pow(10, places);
     return Math.round(value * div) / div;
@@ -84,8 +91,45 @@
       // removing the "loading" state - show component
       this.el.className = el.className.replace(/multihandle--loading/g, '');
 
+      this.options = this.parseOptions(options);
+
+      // for non-linear, or value/label scales
+      this.dataset = null;
+
+      // are we dragging something?
+      this.dragging = false;
+
+      // the component will be generated here
+      this.container = this.el.querySelector('.multihandle__component');
+      if (!this.container) {
+        this.container = this.el;
+      }
+
+      // reference to the original handlers, converted to an array
+      this.handlers = [];
+      this.handlerEls = [];
+      this.lines = [];
+
+      // creating the component
+      this.buildComponent();
+      this.syncHandlersToInputs();
+      this.syncLinesBetweenHandlers();
+
+      // binding events to the component
+      this.bindEvents();
+    }
+
+    /**
+     * Creates the this.options, based on the default and the given values
+     *
+     * Plus normalizes some flags/variables
+     *
+     * @param      Object    options   The option argument of the constructor
+     * @return     Object    The merged, final option object
+     */
+    parseOptions(options) {
       // default options
-      this.options = Object.assign({
+      const opts = Object.assign({
         min: 0,
         max: 100,
         step: 0.5,
@@ -98,44 +142,32 @@
         }
       }, domStringMapToObj(this.el.dataset), options);
 
-      this.options.gfx = this.options.gfx.split(',');
+      opts.gfx = opts.gfx.split(',');
 
-      if (typeof this.options.step === 'string') {
-        this.options.step = parseFloat(this.options.step, 10);
+      opts.dataset = !!opts.dataset;
+
+      if (opts.dataset) {
+        opts.min = 0;
+        opts.step = 1;
       }
 
-      this.options.incLittle = typeof this.options.incLittle === 'undefined' ?
-        this.options.step : this.options.incLittle;
+      if (typeof opts.step === 'string') {
+        opts.step = parseFloat(opts.step, 10);
+      }
 
-      this.options.incBig = typeof this.options.incBig === 'undefined' ?
-        this.options.step * 10 : this.options.incBig;
+      opts.incLittle = typeof opts.incLittle === 'undefined' ?
+        opts.step : opts.incLittle;
+
+      opts.incBig = typeof opts.incBig === 'undefined' ?
+        opts.step * 10 : opts.incBig;
 
       // normalize values
-      this.options.min = parseFloat(this.options.min, 10);
-      this.options.max = parseFloat(this.options.max, 10);
-      this.options.step = parseFloat(this.options.step, 10);
+      opts.min = parseFloat(opts.min, 10);
+      opts.max = parseFloat(opts.max, 10);
+      opts.step = parseFloat(opts.step, 10);
 
-      // are we dragging something?
-      this.dragging = false;
-
-      // the component will be generated here
-      this.container = this.el.querySelector('.multihandle__component');
-      if (!this.container) {
-        this.container = this.el;
-      }
-
-      // reference to the original handlers, converted to an array
-      this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input'));
-      this.handlerEls = [];
-      this.lines = [];
-
-      // creating the component
-      this.buildComponent();
-      this.syncHandlersToInputs();
-      this.syncLinesBetweenHandlers();
-
-      // binding events to the component
-      this.bindEvents();
+      console.log(opts);
+      return opts;
     }
 
     /**
@@ -150,6 +182,37 @@
           ${self.options.tpl.handler}
         </a>`), ''
       );
+    }
+
+    /**
+     * Creates a dataset from the given select tag
+     *
+     * @param    DOMNode  select
+     * @return   Array
+     */
+    createDataset(select) {
+      const dataset = [];
+      for (let ix = 0; ix <= select.options.length - 1; ix++) {
+        dataset.push({
+          value: select.options[ix].value,
+          label: select.options[ix].text
+        });
+      }
+
+      return dataset;
+    }
+
+    /**
+     * Find the native input elements in the component
+     */
+    findInputs() {
+      if (this.options.dataset) {
+        this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('select'));
+        this.dataset = this.createDataset(this.handlers[0]);
+        this.options.max = this.handlers[0].options.length - 1;
+      } else {
+        this.handlers = Array.prototype.slice.call(this.el.querySelectorAll('input'));
+      }
     }
 
     /**
@@ -262,6 +325,7 @@
       this.container.appendChild(track);
 
       // putting the handlers on the track
+      this.findInputs();
       track.innerHTML = this.options.tpl.track.replace(/\${handlers}/, this.createHandlers());
       this.findHandlers(track);
 
@@ -295,6 +359,8 @@
 
       this.handlerEls.forEach((handle) => {
         handle.addEventListener('keydown', evt => this.onHandlerKeyDown(evt));
+        // stops link dragging - won't work with addEventListener!
+        handle.ondragstart = evt => (false);
       });
     }
 
@@ -347,7 +413,11 @@
         const newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
         const percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
-        this.setPercentValue(this.dragging.handler, percent);
+        if (this.dataset) {
+          this.setDatasetAsPercent(this.dragging.handler, percent);
+        } else {
+          this.setValueAsPercent(this.dragging.handler, percent);
+        }
       }
     }
 
@@ -373,11 +443,29 @@
      * Object handler
      * Float percent
      */
-    setPercentValue(handler, percent) {
+    setValueAsPercent(handler, percent) {
       const value = this.percentToValue(percent);
       this.setHandlerValue(handler, value);
     }
 
+    /**
+     * Find a value in the dataset by a percent instead of an index.
+     *
+     * @param      {<type>}  handler  The handler
+     * @param      {<type>}  percent  The percent
+     */
+    setDatasetAsPercent(handler, percent) {
+      const ix = this.percentToValue(percent);
+      const data = this.dataset[ix];
+      this.setHandlerValue(handler, data.value);
+      console.log(data);
+    }
+
+    /**
+     * Handling the keystrokes
+     *
+     * @param      Event  evt
+     */
     onHandlerKeyDown(evt) {
       switch (evt.keyCode) {
         case 38: // up
@@ -500,6 +588,13 @@
       return (px / full) * 100;
     }
 
+    percentToIndex(percent) {
+      const scale = this.options.max - this.options.min;
+      // before rounding to options.step
+      const rawValue = (percent / (100 / scale));
+      return rawValue;
+    }
+
     /**
      * Gives back the value based on the current handler position
      *
@@ -509,7 +604,7 @@
     percentToValue(percent) {
       const scale = this.options.max - this.options.min;
       // before rounding to options.step
-      const rawValue = (percent / (100 / scale)) + this.options.min;
+      const rawValue = this.percentToIndex() + this.options.min;
       const rounded = round(rawValue, this.options.step);
 
       return rounded;
