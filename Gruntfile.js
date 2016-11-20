@@ -55,6 +55,15 @@ module.exports = function (grunt) {
       files: ['Gruntfile.js', 'src/multihandle.js']
     },
 
+    uglify: {
+      dist: {
+        files: {
+          'dist/multihandle.min.js': 'dist/multihandle.js',
+          'dist/polyfill.min.js': 'dist/polyfill.js'
+        }
+      }
+    },
+
     watch: {
       options: {
         spawn: false
@@ -66,6 +75,7 @@ module.exports = function (grunt) {
 
   grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-postcss');
@@ -73,5 +83,5 @@ module.exports = function (grunt) {
 
   grunt.registerTask('dev', ['eslint', 'babel', 'copy', 'sass', 'postcss']);
   grunt.registerTask('continuous', ['dev', 'watch']);
-  grunt.registerTask('default', ['dev']);
+  grunt.registerTask('default', ['dev', 'uglify']);
 };
