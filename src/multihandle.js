@@ -162,8 +162,8 @@
         // decorate them as you like
         tpl: {
           track: '${handlers}',
-          handler: '${value}',
-          snappingpoint: '${value}'
+          handler: '${label}',
+          snappingpoint: '${label}'
         }
       }, domStringMapToObj(this.el.dataset), options);
 
@@ -303,9 +303,17 @@
 
       this.snappingMap.forEach((data, ix) => {
         const snap = document.createElement('span');
+        let label;
         snap.className = 'multihandle__snappingpoint';
         snaps.appendChild(snap);
-        snap.innerHTML = this.options.tpl.snappingpoint.replace(/\${value}/, data[0]);
+
+        if (this.options.dataset === 'select') {
+          label = this.dataset[data[0]].label;
+        } else {
+          label = data[0];
+        }
+
+        snap.innerHTML = this.options.tpl.snappingpoint.replace(/\${label}/, label);
         snap.style.left = `${data[1]}%`;
       });
     }
@@ -352,8 +360,27 @@
     setHandlerPos(handler, percent) {
       const value = this.percentToValue(percent);
       handler.style.left = `${percent}%`;
-      handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
+      this.updateHandlerLabel(handler, value);
       this.syncIntervalsBetweenHandlers();
+    }
+
+    /**
+     * Update a handler's label by a value (could be a real value, or a dataset index)
+     *
+     * @param  {DOMNode} handler
+     * @param  {Float} value
+     * @return {undefined}
+     */
+    updateHandlerLabel(handler, value) {
+      let label;
+
+      if (this.options.dataset === 'select') {
+        label = this.dataset[value].label;
+      } else {
+        label = value;
+      }
+
+      handler.innerHTML = this.options.tpl.handler.replace(/\${label}/, label);
     }
 
     /**
@@ -461,11 +488,7 @@
         const newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
         const percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
-        if (this.dataset) {
-          this.setValueFromDatasetByPercent(this.dragging.handler, percent);
-        } else {
-          this.setValueByPercent(this.dragging.handler, percent);
-        }
+        this.setValueByPercent(this.dragging.handler, percent);
       }
     }
 
@@ -480,7 +503,13 @@
     setValue(handler, value) {
       value = this.normalizeValue(value);
       const percent = this.valueToPercent(value);
-      handler.inputReference.value = value;
+
+      if (this.options.dataset === 'select') {
+        handler.inputReference.options.selectedIndex = value;
+      } else {
+        handler.inputReference.value = value;
+      }
+
       handler.inputReference.dispatchEvent(newEvent('input'));
       this.setHandlerPos(handler, percent);
     }
@@ -494,19 +523,6 @@
     setValueByPercent(handler, percent) {
       const value = this.percentToValue(percent);
       this.setValue(handler, value);
-    }
-
-    /**
-     * Find a value in the dataset by percent instead of index.
-     *
-     * @param {DOMNode} handler
-     * @param {Float} percent
-     */
-    setValueFromDatasetByPercent(handler, percent) {
-      const raw = this.percentToValue(percent);
-      const data = this.dataset[raw];
-      this.setValue(handler, data.value);
-      console.log(data);
     }
 
     /**
@@ -570,13 +586,18 @@
      * @return {undefined}
      */
     syncHandlersToInputs() {
-      const self = this;
-      self.handlers.forEach((el) => {
-        const value = parseFloat(el.inputReference.value, 10);
-        const percent = self.valueToPercent(value);
-        el.style.left = `${percent}%`;
-        el.innerHTML = el.innerHTML.replace(/\${value}/, value);
-      });
+      if (this.options.dataset === 'select') {
+        const ix = this.inputs[0].options.selectedIndex;
+        const percent = this.valueToPercent(ix);
+        this.setHandlerPos(this.handlers[0], percent);
+      } else {
+        const self = this;
+        self.handlers.forEach((el) => {
+          const value = parseFloat(el.inputReference.value, 10);
+          const percent = self.valueToPercent(value);
+          self.setHandlerPos(el, percent);
+        });
+      }
     }
 
     /**
@@ -643,7 +664,7 @@
      */
     percentToValue(percent) {
       // before rounding to options.step
-      const rawValue = this.percentToOffset() + this.options.min;
+      const rawValue = this.percentToOffset(percent) + this.options.min;
       const rounded = round(rawValue, this.options.step);
 
       return rounded;

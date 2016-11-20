@@ -176,8 +176,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // decorate them as you like
           tpl: {
             track: '${handlers}',
-            handler: '${value}',
-            snappingpoint: '${value}'
+            handler: '${label}',
+            snappingpoint: '${label}'
           }
         }, domStringMapToObj(this.el.dataset), options);
 
@@ -338,9 +338,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         this.snappingMap.forEach(function (data, ix) {
           var snap = document.createElement('span');
+          var label = void 0;
           snap.className = 'multihandle__snappingpoint';
           snaps.appendChild(snap);
-          snap.innerHTML = _this2.options.tpl.snappingpoint.replace(/\${value}/, data[0]);
+
+          if (_this2.options.dataset === 'select') {
+            label = _this2.dataset[data[0]].label;
+          } else {
+            label = data[0];
+          }
+
+          snap.innerHTML = _this2.options.tpl.snappingpoint.replace(/\${label}/, label);
           snap.style.left = data[1] + '%';
         });
       }
@@ -395,8 +403,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function setHandlerPos(handler, percent) {
         var value = this.percentToValue(percent);
         handler.style.left = percent + '%';
-        handler.innerHTML = this.options.tpl.handler.replace(/\${value}/, value);
+        this.updateHandlerLabel(handler, value);
         this.syncIntervalsBetweenHandlers();
+      }
+
+      /**
+       * Update a handler's label by a value (could be a real value, or a dataset index)
+       *
+       * @param  {DOMNode} handler
+       * @param  {Float} value
+       * @return {undefined}
+       */
+
+    }, {
+      key: 'updateHandlerLabel',
+      value: function updateHandlerLabel(handler, value) {
+        var label = void 0;
+
+        if (this.options.dataset === 'select') {
+          label = this.dataset[value].label;
+        } else {
+          label = value;
+        }
+
+        handler.innerHTML = this.options.tpl.handler.replace(/\${label}/, label);
       }
 
       /**
@@ -537,11 +567,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
           var percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
-          if (this.dataset) {
-            this.setValueFromDatasetByPercent(this.dragging.handler, percent);
-          } else {
-            this.setValueByPercent(this.dragging.handler, percent);
-          }
+          this.setValueByPercent(this.dragging.handler, percent);
         }
       }
 
@@ -559,7 +585,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function setValue(handler, value) {
         value = this.normalizeValue(value);
         var percent = this.valueToPercent(value);
-        handler.inputReference.value = value;
+
+        if (this.options.dataset === 'select') {
+          handler.inputReference.options.selectedIndex = value;
+        } else {
+          handler.inputReference.value = value;
+        }
+
         handler.inputReference.dispatchEvent(newEvent('input'));
         this.setHandlerPos(handler, percent);
       }
@@ -576,22 +608,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function setValueByPercent(handler, percent) {
         var value = this.percentToValue(percent);
         this.setValue(handler, value);
-      }
-
-      /**
-       * Find a value in the dataset by percent instead of index.
-       *
-       * @param {DOMNode} handler
-       * @param {Float} percent
-       */
-
-    }, {
-      key: 'setValueFromDatasetByPercent',
-      value: function setValueFromDatasetByPercent(handler, percent) {
-        var raw = this.percentToValue(percent);
-        var data = this.dataset[raw];
-        this.setValue(handler, data.value);
-        console.log(data);
       }
 
       /**
@@ -657,13 +673,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'syncHandlersToInputs',
       value: function syncHandlersToInputs() {
-        var self = this;
-        self.handlers.forEach(function (el) {
-          var value = parseFloat(el.inputReference.value, 10);
-          var percent = self.valueToPercent(value);
-          el.style.left = percent + '%';
-          el.innerHTML = el.innerHTML.replace(/\${value}/, value);
-        });
+        var _this4 = this;
+
+        if (this.options.dataset === 'select') {
+          var ix = this.inputs[0].options.selectedIndex;
+          var percent = this.valueToPercent(ix);
+          this.setHandlerPos(this.handlers[0], percent);
+        } else {
+          (function () {
+            var self = _this4;
+            self.handlers.forEach(function (el) {
+              var value = parseFloat(el.inputReference.value, 10);
+              var percent = self.valueToPercent(value);
+              self.setHandlerPos(el, percent);
+            });
+          })();
+        }
       }
 
       /**
@@ -745,7 +770,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'percentToValue',
       value: function percentToValue(percent) {
         // before rounding to options.step
-        var rawValue = this.percentToOffset() + this.options.min;
+        var rawValue = this.percentToOffset(percent) + this.options.min;
         var rounded = round(rawValue, this.options.step);
 
         return rounded;
