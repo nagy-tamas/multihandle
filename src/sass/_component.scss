@@ -30,11 +30,11 @@
   text-decoration: none;
 }
 
-.multihandle__line {
+.multihandle__interval {
   display: block;
   height: $multihandle-track-height;
   position: absolute;
-  background: $multihandle-line-color;
+  background: $multihandle-intervals-color;
 }
 
 .multihandle__snappingpoint {
@@ -44,8 +44,4 @@
   border-right: 1px solid $multihandle-snap-color;
   text-indent: -999em;
   overflow: hidden;
-}
-
-body.multihandle-disable-drag {
-  user-select: none;
 }
