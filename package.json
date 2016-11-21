@@ -1,6 +1,6 @@
 {
   "name": "multihandle",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Multi-handle range component for HTML forms without any dependencies.",
   "main": "index.js",
   "scripts": {
