@@ -3,7 +3,6 @@ $multihandle-snap-height: 5px !default;
 
 .multihandle--snapbars {
   .multihandle__snappingpoint {
-    position: absolute;
     width: 1px;
     height: $multihandle-snap-height;
     border-right: 1px solid $multihandle-snap-color;

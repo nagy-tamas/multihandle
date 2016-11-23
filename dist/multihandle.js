@@ -174,11 +174,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           gfx: '',
 
           // decorate them as you like
-          tpl: {
-            track: '${handlers}',
-            handler: '${label}',
-            snappingpoint: '${label}'
-          }
+          tplTrack: '${handlers}',
+          tplHandler: '${label}',
+          tplSnappingpoint: '${label}'
         }, domStringMapToObj(this.el.dataset), options);
 
         opts.gfx = opts.gfx.split(',');
@@ -217,7 +215,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function createHandlers(inputs) {
         var self = this;
         return inputs.reduce(function (previous, current) {
-          return previous + '<a href="javascript:void(0)" class="multihandle__handle">\n          ' + self.options.tpl.handler + '\n        </a>';
+          return previous + '<a href="javascript:void(0)" class="multihandle__handle">\n          ' + self.options.tplHandler + '\n        </a>';
         }, '');
       }
 
@@ -348,7 +346,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             label = data[0];
           }
 
-          snap.innerHTML = _this2.options.tpl.snappingpoint.replace(/\${label}/, label);
+          snap.innerHTML = _this2.options.tplSnappingpoint.replace(/\${label}/, label);
           snap.style.left = data[1] + '%';
         });
       }
@@ -392,7 +390,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       /**
-       * Sets the handler left position to the given percent value
+       * Sets the handler's position to the given percent value.
+       *
+       * It validates the percentage first, and also updates the label, and the
+       * interval between multiple handlers (if there's any).
        *
        * @param {DOMNode} handler
        * @param {Float} percent
@@ -402,9 +403,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'setHandlerPos',
       value: function setHandlerPos(handler, percent) {
         var value = this.percentToValue(percent);
-        handler.style.left = percent + '%';
+        this.setHandlerLeft(handler, percent);
         this.updateHandlerLabel(handler, value);
         this.syncIntervalsBetweenHandlers();
+      }
+
+      /**
+       * Sets a handler's left position without any checking.
+       *
+       * @param  {DOMNOde}  handler
+       * @param  {Float}    percent
+       */
+
+    }, {
+      key: 'setHandlerLeft',
+      value: function setHandlerLeft(handler, percent) {
+        // would be better, but it won't work properly - ther percentage in this
+        // case is relative to the element's size instead of the parent's size
+        // handler.style.transform = `translate3d(${percent}%, 0, 0)`;
+
+        handler.style.left = percent + '%';
       }
 
       /**
@@ -426,7 +444,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           label = value;
         }
 
-        handler.innerHTML = this.options.tpl.handler.replace(/\${label}/, label);
+        handler.innerHTML = this.options.tplHandler.replace(/\${label}/, label);
       }
 
       /**
@@ -450,7 +468,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.initDataset();
         }
 
-        track.innerHTML = this.options.tpl.track.replace(/\${handlers}/, this.createHandlers(this.inputs));
+        track.innerHTML = this.options.tplTrack.replace(/\${handlers}/, this.createHandlers(this.inputs));
         this.handlers = this.findHandlers(track);
 
         this.createIntervals(track);

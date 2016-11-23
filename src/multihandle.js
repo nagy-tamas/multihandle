@@ -160,11 +160,9 @@
         gfx: '',
 
         // decorate them as you like
-        tpl: {
-          track: '${handlers}',
-          handler: '${label}',
-          snappingpoint: '${label}'
-        }
+        tplTrack: '${handlers}',
+        tplHandler: '${label}',
+        tplSnappingpoint: '${label}'
       }, domStringMapToObj(this.el.dataset), options);
 
       opts.gfx = opts.gfx.split(',');
@@ -203,7 +201,7 @@
       const self = this;
       return inputs.reduce((previous, current) => (
         `${previous}<a href="javascript:void(0)" class="multihandle__handle">
-          ${self.options.tpl.handler}
+          ${self.options.tplHandler}
         </a>`), ''
       );
     }
@@ -313,7 +311,7 @@
           label = data[0];
         }
 
-        snap.innerHTML = this.options.tpl.snappingpoint.replace(/\${label}/, label);
+        snap.innerHTML = this.options.tplSnappingpoint.replace(/\${label}/, label);
         snap.style.left = `${data[1]}%`;
       });
     }
@@ -352,16 +350,33 @@
     }
 
     /**
-     * Sets the handler left position to the given percent value
+     * Sets the handler's position to the given percent value.
+     *
+     * It validates the percentage first, and also updates the label, and the
+     * interval between multiple handlers (if there's any).
      *
      * @param {DOMNode} handler
      * @param {Float} percent
      */
     setHandlerPos(handler, percent) {
       const value = this.percentToValue(percent);
-      handler.style.left = `${percent}%`;
+      this.setHandlerLeft(handler, percent);
       this.updateHandlerLabel(handler, value);
       this.syncIntervalsBetweenHandlers();
+    }
+
+    /**
+     * Sets a handler's left position without any checking.
+     *
+     * @param  {DOMNOde}  handler
+     * @param  {Float}    percent
+     */
+    setHandlerLeft(handler, percent) {
+      // would be better, but it won't work properly - ther percentage in this
+      // case is relative to the element's size instead of the parent's size
+      // handler.style.transform = `translate3d(${percent}%, 0, 0)`;
+
+      handler.style.left = `${percent}%`;
     }
 
     /**
@@ -380,7 +395,7 @@
         label = value;
       }
 
-      handler.innerHTML = this.options.tpl.handler.replace(/\${label}/, label);
+      handler.innerHTML = this.options.tplHandler.replace(/\${label}/, label);
     }
 
     /**
@@ -402,7 +417,7 @@
       }
 
 
-      track.innerHTML = this.options.tpl.track.replace(/\${handlers}/,
+      track.innerHTML = this.options.tplTrack.replace(/\${handlers}/,
         this.createHandlers(this.inputs));
       this.handlers = this.findHandlers(track);
 
