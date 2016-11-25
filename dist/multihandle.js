@@ -566,6 +566,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function onMouseUp(evt) {
         if (this.dragging) {
           this.dragging.handler.classList.remove('multihandle__handle--active');
+          this.dragging.handler.inputReference.dispatchEvent(newEvent('inputend'));
         }
 
         this.dragging = false;
@@ -662,24 +663,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
       }
     }, {
+      key: 'incDec',
+      value: function incDec(handler, offset) {
+        this.setValue(handler, parseFloat(handler.inputReference.value, 10) + offset);
+        handler.inputReference.dispatchEvent(newEvent('inputend'));
+      }
+    }, {
       key: 'incByLittle',
       value: function incByLittle(handler) {
-        this.setValue(handler, parseFloat(handler.inputReference.value, 10) + this.options.incLittle);
+        this.incDec(handler, this.options.incLittle);
       }
     }, {
       key: 'descByLittle',
       value: function descByLittle(handler) {
-        this.setValue(handler, parseFloat(handler.inputReference.value, 10) - this.options.incLittle);
+        this.incDec(handler, -this.options.incLittle);
       }
     }, {
       key: 'incByBig',
       value: function incByBig(handler) {
-        this.setValue(handler, parseFloat(handler.inputReference.value, 10) + this.options.incBig);
+        this.incDec(handler, this.options.incBig);
       }
     }, {
       key: 'descByBig',
       value: function descByBig(handler) {
-        this.setValue(handler, parseFloat(handler.inputReference.value, 10) - this.options.incBig);
+        this.incDec(handler, -this.options.incBig);
       }
 
       /**
