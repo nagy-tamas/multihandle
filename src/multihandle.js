@@ -448,6 +448,7 @@
       document.body.addEventListener('touchcancel', evt => this.onMouseUp(evt));
       document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
       document.body.addEventListener('touchmove', evt => this.onMouseMove(evt));
+      this.el.addEventListener('inputUpdated', evt => this.syncHandlersToInputs());
 
       this.handlers.forEach((handle) => {
         handle.addEventListener('keydown', evt => this.onHandlerKeyDown(evt));

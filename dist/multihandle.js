@@ -517,6 +517,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         document.body.addEventListener('touchmove', function (evt) {
           return _this3.onMouseMove(evt);
         });
+        this.el.addEventListener('inputUpdated', function (evt) {
+          return _this3.syncHandlersToInputs();
+        });
 
         this.handlers.forEach(function (handle) {
           handle.addEventListener('keydown', function (evt) {
