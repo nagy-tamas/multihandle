@@ -299,6 +299,8 @@
       snaps.className = 'multihandle__snappingpoints';
       track.appendChild(snaps);
 
+      const handler = track.querySelector('.multihandle__handle');
+
       this.snappingMap.forEach((data, ix) => {
         const snap = document.createElement('span');
         let label;
@@ -311,8 +313,18 @@
           label = data[0];
         }
 
+        let pointer = document.createElement('a');
+        pointer.className = "multihandle__handle";
+        pointer.style.background = 'transparent';
+        pointer.style.boxShadow = 'none';
+        pointer.style.zIndex = '0';
+        pointer.percent = data[1];
+        pointer.handlerReference = handler;
+        this.pointers.push(pointer);
+
         snap.innerHTML = this.options.tplSnappingpoint.replace(/\${label}/, label);
         snap.style.left = `${data[1]}%`;
+        snap.appendChild(pointer);
       });
     }
 
@@ -425,6 +437,7 @@
 
       if (this.isItSnaps()) {
         this.snappingMap = this.createSnappingMap();
+        this.pointers = [];
 
         if (this.options.gfx.indexOf('snappingpoints') > -1) {
           this.createSnappingPoints(track);
@@ -464,20 +477,29 @@
      * @return {undefined}
      */
     onMouseDown(evt) {
-      const found = this.handlers.indexOf(evt.target);
+      const foundHandler = this.handlers.indexOf(evt.target);
+      const foundPointer = this.pointers.indexOf(evt.target);
       // click triggered somewhere in our component, not on one of the handlers
-      if (found < 0) {
+      if (foundHandler < 0 && foundPointer < 0) {
         return;
       }
 
-      this.dragging = {
-        handlerIx: found,
-        handler: this.handlers[found],
-        startLeft: this.handlers[found].offsetLeft,
-        startX: getClientX(evt)
-      };
+      if (foundHandler >= 0) {
+        this.dragging = {
+          handlerIx: foundHandler,
+          handler: this.handlers[foundHandler],
+          startLeft: this.handlers[foundHandler].offsetLeft,
+          startX: getClientX(evt)
+        };
 
-      this.dragging.handler.classList.add('multihandle__handle--active');
+        this.dragging.handler.classList.add('multihandle__handle--active');
+      }
+
+      if (foundPointer >= 0) {
+        const handler = this.pointers[foundPointer].handlerReference;
+        this.setValueByPercent(handler, this.pointers[foundPointer].percent);
+        handler.inputReference.dispatchEvent(newEvent('inputend'));
+      }
     }
 
     /**
