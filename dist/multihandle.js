@@ -85,6 +85,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return evt;
   }
 
+  /**
+   * Get nearest parent element matching selector
+   *
+   * http://stackoverflow.com/a/16430350
+   *
+   * @param {DOMNode} el Reference to child element
+   * @param {String} selector CSS query to match an ancestor to
+   */
+
+  function closest(el, selector) {
+    var matchesSelector = el.matches || el.webkitMatchesSelector || el.mozMatchesSelector || el.msMatchesSelector;
+
+    while (el) {
+      if (matchesSelector.call(el, selector)) {
+        break;
+      }
+      el = el.parentElement;
+    }
+    return el;
+  }
+
   var MultiHandle = function () {
     /**
      * Creates the main component
@@ -174,7 +195,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           gfx: '',
 
           // decorate them as you like
-          tplTrack: '${handlers}',
+          tplTrack: '<span class="multihandle__track-deco"></span>${handlers}',
           tplHandler: '${label}',
           tplSnappingpoint: '${label}'
         }, domStringMapToObj(this.el.dataset), options);
@@ -545,6 +566,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var found = this.handlers.indexOf(evt.target);
         // click triggered somewhere in our component, not on one of the handlers
         if (found < 0) {
+          var parent = closest(evt.target, '.multihandle__track');
+          if (parent) {
+            this.jumpToPx(this.handlers[0], getClientX(evt));
+          }
           return;
         }
 
@@ -690,6 +715,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'descByBig',
       value: function descByBig(handler) {
         this.incDec(handler, -this.options.incBig);
+      }
+    }, {
+      key: 'jumpToPx',
+      value: function jumpToPx(handler, px) {
+        var percent = this.normalizePercent(this.pixelToPercent(px));
+        this.setValueByPercent(handler, percent);
       }
 
       /**
