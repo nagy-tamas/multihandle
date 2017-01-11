@@ -7,46 +7,62 @@
     <link rel="stylesheet" href="multihandle.css">
     <link rel="stylesheet" href="theme-snapbars.css">
     <link rel="stylesheet" href="theme-beauty.css">
+
+<style type="text/css">
+html, body {
+  margin: 0;
+  padding: 0;
+}
+.container {
+  padding: 1em 4em;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+</style>
 </head>
 <body>
 
-  <h2>Two handlers with bars between them</h2>
+  <div class="container">
 
-  <form action="" method="get">
+    <h2>Two handlers with bars between them</h2>
 
-  <div class="multihandle multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-gfx="snappingpoints">
-    <div class="multihandle__component"></div>
-    <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
-    <input type="text" name="one" value="3" />
-    <input type="text" name="two[array]" value="7" />
+    <form action="" method="get">
+
+    <div class="multihandle multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-gfx="snappingpoints">
+      <div class="multihandle__component"></div>
+      <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
+      <input type="text" name="one" value="3" />
+      <input type="text" name="two[array]" value="7" />
+    </div>
+
+    <h2>One handler, values are coming from a select element</h2>
+
+    <div class="multihandle multihandle--loading" data-dataset="select" data-gfx="snappingpoints">
+      <div class="multihandle__component"></div>
+      <select name="three">
+        <option value="10">ten</option>
+        <option value="11" selected>eleven</option>
+        <option value="12">twelve</option>
+        <option value="14">fourteen</option>
+        <option value="26">twenty-six</option>
+      </select>
+    </div>
+
+    <h2>Using themes: bars are shown on the track</h2>
+
+    <div class="multihandle multihandle--snapbars multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-gfx="snappingpoints">
+      <div class="multihandle__component"></div>
+      <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
+      <input type="text" name="one" value="3" />
+      <input type="text" name="two[array]" value="7" />
+    </div>
+
+    <br><br>
+    <input type="submit">
+
+    </form>
+
   </div>
-
-  <h2>One handler, values are coming from a select element</h2>
-
-  <div class="multihandle multihandle--loading" data-dataset="select" data-gfx="snappingpoints">
-    <div class="multihandle__component"></div>
-    <select name="three">
-      <option value="10">ten</option>
-      <option value="11" selected>eleven</option>
-      <option value="12">twelve</option>
-      <option value="14">fourteen</option>
-      <option value="26">twenty-six</option>
-    </select>
-  </div>
-
-  <h2>Using themes: bars are shown on the track</h2>
-
-  <div class="multihandle multihandle--snapbars multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-gfx="snappingpoints">
-    <div class="multihandle__component"></div>
-    <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
-    <input type="text" name="one" value="3" />
-    <input type="text" name="two[array]" value="7" />
-  </div>
-
-  <br><br>
-  <input type="submit">
-
-  </form>
 
   <script src="polyfill.js"></script>
   <script src="multihandle.js"></script>
