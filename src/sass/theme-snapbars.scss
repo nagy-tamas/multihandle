@@ -1,12 +1,20 @@
-$multihandle-snap-color: #777 !default;
-$multihandle-snap-height: 5px !default;
+@import 'variables';
+
+$multihandle-snap-color: #fff !default;
+$multihandle-snap-height: 8px !default;
+$multihandle-snap-width: 2px !default;
 
 .multihandle--snapbars {
   .multihandle__snappingpoint {
-    width: 1px;
-    height: $multihandle-snap-height;
-    border-right: 1px solid $multihandle-snap-color;
-    text-indent: -999em;
-    overflow: hidden;
+    &::before {
+      position: absolute;
+      content: '';
+      width: $multihandle-snap-width;
+      height: $multihandle-snap-height;
+      left: 50%;
+      top: $multihandle-handle-height / 2 - $multihandle-track-height - $multihandle-snap-height / 2;
+      margin-left: $multihandle-snap-width / 2;
+      background: $multihandle-snap-color;
+    }
   }
 }

@@ -79,6 +79,28 @@
     return evt;
   }
 
+  /**
+   * Get nearest parent element matching selector
+   *
+   * http://stackoverflow.com/a/16430350
+   *
+   * @param {DOMNode} el Reference to child element
+   * @param {String} selector CSS query to match an ancestor to
+   */
+
+  function closest(el, selector) {
+    const matchesSelector = el.matches || el.webkitMatchesSelector ||
+      el.mozMatchesSelector || el.msMatchesSelector;
+
+    while (el) {
+      if (matchesSelector.call(el, selector)) {
+        break;
+      }
+      el = el.parentElement;
+    }
+    return el;
+  }
+
   class MultiHandle {
     /**
      * Creates the main component
@@ -160,7 +182,7 @@
         gfx: '',
 
         // decorate them as you like
-        tplTrack: '${handlers}',
+        tplTrack: '<span class="multihandle__track-deco"></span>${handlers}',
         tplHandler: '${label}',
         tplSnappingpoint: '${label}'
       }, domStringMapToObj(this.el.dataset), options);
@@ -492,6 +514,10 @@
       const found = this.handlers.indexOf(evt.target);
       // click triggered somewhere in our component, not on one of the handlers
       if (found < 0) {
+        const parent = closest(evt.target, '.multihandle__track');
+        if (parent) {
+          this.jumpToPx(this.handlers[0], getClientX(evt));
+        }
         return;
       }
 
@@ -613,6 +639,11 @@
 
     descByBig(handler) {
       this.incDec(handler, -this.options.incBig);
+    }
+
+    jumpToPx(handler, px) {
+      const percent = this.normalizePercent(this.pixelToPercent(px));
+      this.setValueByPercent(handler, percent);
     }
 
     /**

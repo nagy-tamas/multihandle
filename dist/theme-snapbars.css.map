@@ -2,8 +2,9 @@
 	"version": 3,
 	"file": "theme-snapbars.css",
 	"sources": [
-		"../src/sass/theme-snapbars.scss"
+		"../src/sass/theme-snapbars.scss",
+		"../src/sass/_variables.scss"
 	],
-	"mappings": "AAGA,AACE,sBADoB,CACpB,2BAA2B,CAAC;EAC1B,KAAK,EAAE,GAAI;EACX,MAAM,EALgB,GAAG;EAMzB,YAAY,EAAE,GAAG,CAAC,KAAK,CAPF,IAAI;EAQzB,WAAW,EAAE,MAAO;EACpB,QAAQ,EAAE,MAAO,GAClB",
+	"mappings": "AAMA,AACE,sBADoB,CACpB,2BAA2B,AACxB,QAAQ,CAAC;EACR,QAAQ,EAAE,QAAS;EACnB,OAAO,EAAE,EAAG;EACZ,KAAK,EAPc,GAAG;EAQtB,MAAM,EATc,GAAG;EAUvB,IAAI,EAAE,GAAI;EACV,GAAG,EAAE,GAA0B;EAC/B,WAAW,EAAE,GAAuB;EACpC,UAAU,EAdS,IAAI,GAexB",
 	"names": []
 }

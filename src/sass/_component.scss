@@ -11,10 +11,28 @@
 }
 
 .multihandle__track {
+  position: relative;
+  height: $multihandle-handle-height;
+  background: red;
+}
+
+.multihandle__track-deco {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
   height: $multihandle-track-height;
   background: $multihandle-track-color;
   top: $multihandle-handle-height / 2 - $multihandle-track-height / 2;
-  position: relative;
+}
+
+.multihandle__interval {
+  display: block;
+  height: $multihandle-track-height;
+  top: ($multihandle-handle-height / 2) - ($multihandle-track-height / 2);
+  position: absolute;
+  background: $multihandle-intervals-color;
+  z-index: 2;
 }
 
 .multihandle__handle {
@@ -24,21 +42,17 @@
   background: $multihandle-handle-color;
   cursor: pointer;
   position: absolute;
-  top: (-$multihandle-handle-height / 2) + ($multihandle-track-height / 2);
+  top: 0;
   left: 0;
-  z-index: 1;
+  z-index: 3;
   text-decoration: none;
-}
-
-.multihandle__interval {
-  display: block;
-  height: $multihandle-track-height;
-  position: absolute;
-  background: $multihandle-intervals-color;
 }
 
 .multihandle__snappingpoint {
   position: absolute;
+  width: 3em;
+  margin-left: -1.5em;
+  text-align: center;
 }
 
 .multihandle__interval--start {
