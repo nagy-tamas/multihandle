@@ -452,9 +452,9 @@
      */
     buildComponent() {
       // creating the track element
-      const track = document.createElement('div');
-      track.className = 'multihandle__track';
-      this.container.appendChild(track);
+      this.track = document.createElement('div');
+      this.track.className = 'multihandle__track';
+      this.container.appendChild(this.track);
 
       // find all the inputs elements
       this.inputs = this.findInputs(this.el);
@@ -464,22 +464,22 @@
       }
 
 
-      track.innerHTML = this.options.tplTrack.replace(/\${handlers}/,
+      this.track.innerHTML = this.options.tplTrack.replace(/\${handlers}/,
         this.createHandlers(this.inputs));
-      this.handlers = this.findHandlers(track);
+      this.handlers = this.findHandlers(this.track);
 
-      this.createIntervals(track);
+      this.createIntervals(this.track);
 
       if (this.isItSnaps()) {
         this.snappingMap = this.createSnappingMap();
 
         if (this.options.gfx.indexOf('snappingpoints') > -1) {
-          this.createSnappingPoints(track);
+          this.createSnappingPoints(this.track);
         }
       }
 
       // putting the whole component in the container
-      this.container.appendChild(track);
+      this.container.appendChild(this.track);
     }
 
     /**
@@ -511,12 +511,12 @@
      * @return {undefined}
      */
     onMouseDown(evt) {
+      // if click triggered somewhere in our component, not on one of the handlers...
       const found = this.handlers.indexOf(evt.target);
-      // click triggered somewhere in our component, not on one of the handlers
       if (found < 0) {
         const parent = closest(evt.target, '.multihandle__track');
         if (parent) {
-          this.jumpToPx(this.handlers[0], getClientX(evt));
+          this.jumpToPx(this.handlers[0], getClientX(evt) - this.track.offsetLeft);
         }
         return;
       }
@@ -553,7 +553,7 @@
      */
     onMouseMove(evt) {
       if (this.dragging && this.dragging.handlerIx > -1) {
-        const newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
+        const newLeftPx = getClientX(evt) - this.track.offsetLeft;
         const percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
         this.setValueByPercent(this.dragging.handler, percent);
@@ -702,7 +702,7 @@
      * @return {Float} percent
      */
     pixelToPercent(px) {
-      const full = this.container.scrollWidth;
+      const full = this.track.clientWidth;
       return (px / full) * 100;
     }
 

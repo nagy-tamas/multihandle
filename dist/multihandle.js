@@ -494,9 +494,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'buildComponent',
       value: function buildComponent() {
         // creating the track element
-        var track = document.createElement('div');
-        track.className = 'multihandle__track';
-        this.container.appendChild(track);
+        this.track = document.createElement('div');
+        this.track.className = 'multihandle__track';
+        this.container.appendChild(this.track);
 
         // find all the inputs elements
         this.inputs = this.findInputs(this.el);
@@ -505,21 +505,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.initDataset();
         }
 
-        track.innerHTML = this.options.tplTrack.replace(/\${handlers}/, this.createHandlers(this.inputs));
-        this.handlers = this.findHandlers(track);
+        this.track.innerHTML = this.options.tplTrack.replace(/\${handlers}/, this.createHandlers(this.inputs));
+        this.handlers = this.findHandlers(this.track);
 
-        this.createIntervals(track);
+        this.createIntervals(this.track);
 
         if (this.isItSnaps()) {
           this.snappingMap = this.createSnappingMap();
 
           if (this.options.gfx.indexOf('snappingpoints') > -1) {
-            this.createSnappingPoints(track);
+            this.createSnappingPoints(this.track);
           }
         }
 
         // putting the whole component in the container
-        this.container.appendChild(track);
+        this.container.appendChild(this.track);
       }
 
       /**
@@ -579,12 +579,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'onMouseDown',
       value: function onMouseDown(evt) {
+        // if click triggered somewhere in our component, not on one of the handlers...
         var found = this.handlers.indexOf(evt.target);
-        // click triggered somewhere in our component, not on one of the handlers
         if (found < 0) {
           var parent = closest(evt.target, '.multihandle__track');
           if (parent) {
-            this.jumpToPx(this.handlers[0], getClientX(evt));
+            this.jumpToPx(this.handlers[0], getClientX(evt) - this.track.offsetLeft);
           }
           return;
         }
@@ -627,7 +627,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'onMouseMove',
       value: function onMouseMove(evt) {
         if (this.dragging && this.dragging.handlerIx > -1) {
-          var newLeftPx = this.dragging.startLeft - (this.dragging.startX - getClientX(evt));
+          var newLeftPx = getClientX(evt) - this.track.offsetLeft;
           var percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
           this.setValueByPercent(this.dragging.handler, percent);
@@ -811,7 +811,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'pixelToPercent',
       value: function pixelToPercent(px) {
-        var full = this.container.scrollWidth;
+        var full = this.track.clientWidth;
         return px / full * 100;
       }
 
