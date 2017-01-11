@@ -1,0 +1,9 @@
+{
+	"version": 3,
+	"file": "theme-example.css",
+	"sources": [
+		"../src/sass/theme-example.scss"
+	],
+	"mappings": "AAAA,AACE,qBADmB,CACnB,2BAA2B,CAAC;EAC1B,KAAK,EAAE,GAAI;EACX,WAAW,EAAE,MAAO;EACpB,QAAQ,EAAE,MAAO,GAClB",
+	"names": []
+}

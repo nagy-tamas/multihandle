@@ -1,0 +1,9 @@
+{
+	"version": 3,
+	"file": "theme-snapbars.css",
+	"sources": [
+		"../src/sass/theme-snapbars.scss"
+	],
+	"mappings": "AAGA,AACE,sBADoB,CACpB,2BAA2B,CAAC;EAC1B,KAAK,EAAE,GAAI;EACX,MAAM,EALgB,GAAG;EAMzB,YAAY,EAAE,GAAG,CAAC,KAAK,CAPF,IAAI;EAQzB,WAAW,EAAE,MAAO;EACpB,QAAQ,EAAE,MAAO,GAClB",
+	"names": []
+}

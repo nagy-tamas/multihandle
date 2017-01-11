@@ -291,6 +291,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       /**
+       * Creates an interval between two handler (or a handler and an edge).
+       *
+       * @param      {<type>}  track   The track
+       */
+
+    }, {
+      key: 'addInterval',
+      value: function addInterval(from, to, track, className) {
+        var interval = document.createElement('span');
+        interval.className = className;
+        interval.from = from;
+        interval.to = to;
+
+        this.intervals.push(interval);
+        track.appendChild(interval);
+      }
+
+      /**
        * Creating intervals between the handlers
        *
        * @param  {DOMNode} track       The intervals will be created in this container
@@ -300,21 +318,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'createIntervals',
       value: function createIntervals(track) {
-        // are we in multihandle mode?
-        if (this.handlers.length < 2) {
-          return;
-        }
+        // interval between the first handler and the track's left side
+        this.addInterval(null, this.handlers[0], track, 'multihandle__interval multihandle__interval--start');
 
         // let's create them between the current handler, and the next one
-        for (var i = 0; i < this.handlers.length - 1; i++) {
-          var interval = document.createElement('span');
-          interval.className = 'multihandle__interval multihandle__interval--' + i;
-          interval.from = this.handlers[i];
-          interval.to = this.handlers[i + 1];
-
-          this.intervals.push(interval);
-          track.appendChild(interval);
+        // are we in multihandle mode?
+        if (this.handlers.length >= 2) {
+          for (var i = 0; i < this.handlers.length - 1; i++) {
+            this.addInterval(this.handlers[i], this.handlers[i + 1], track, 'multihandle__interval multihandle__interval--' + i);
+          }
         }
+
+        // interval between the last handler and the track's right side
+        this.addInterval(this.handlers[this.handlers.length - 1], null, track, 'multihandle__interval multihandle__interval--end');
       }
 
       /**
@@ -728,15 +744,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'syncIntervalsBetweenHandlers',
       value: function syncIntervalsBetweenHandlers() {
-        if (this.handlers.length < 2) {
-          return;
-        }
+        console.log('---------');
 
         this.intervals.forEach(function (interval) {
-          var handler1 = parseFloat(interval.to.style.left, 10);
-          var handler2 = parseFloat(interval.from.style.left, 10);
-          var left = Math.min(handler1, handler2);
-          var width = Math.abs(handler1 - handler2);
+          var fromPos = interval.from ? parseFloat(interval.from.style.left, 10) : 0;
+          var toPos = interval.to ? parseFloat(interval.to.style.left, 10) : 100;
+
+          var left = Math.min(toPos, fromPos);
+          var width = Math.abs(toPos - fromPos);
+
+          console.log(interval.from, interval.to, fromPos, toPos);
 
           interval.style.left = left + '%';
           interval.style.width = width + '%';

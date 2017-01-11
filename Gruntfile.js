@@ -21,7 +21,9 @@ module.exports = function (grunt) {
       },
       dist: {
         files: {
-          'dist/multihandle.css': 'src/sass/multihandle.scss'
+          'dist/multihandle.css': 'src/sass/multihandle.scss',
+          'dist/theme-snapbars.css': 'src/sass/theme-snapbars.scss',
+          'dist/theme-example.css': 'src/sass/theme-example.scss'
         }
       }
     },

@@ -40,3 +40,11 @@
 .multihandle__snappingpoint {
   position: absolute;
 }
+
+.multihandle__interval--start {
+  background: red;
+}
+
+.multihandle__interval--end {
+  background: blue;
+}

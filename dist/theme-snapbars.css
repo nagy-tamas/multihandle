@@ -1,0 +1,8 @@
+.multihandle--snapbars .multihandle__snappingpoint {
+  width: 1px;
+  height: 5px;
+  border-right: 1px solid #777;
+  text-indent: -999em;
+  overflow: hidden; }
+
+/*# sourceMappingURL=theme-snapbars.css.map */
