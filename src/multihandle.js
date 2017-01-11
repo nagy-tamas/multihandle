@@ -179,7 +179,7 @@
 
         // which graphical elements will be enabled? We only have
         // `snappingpoints` right now
-        gfx: '',
+        generateExtraMarkup: '',
 
         // decorate them as you like
         tplTrack: '<span class="multihandle__track-deco"></span>${handlers}',
@@ -187,7 +187,7 @@
         tplSnappingpoint: '${label}'
       }, domStringMapToObj(this.el.dataset), options);
 
-      opts.gfx = opts.gfx.split(',');
+      opts.generateExtraMarkup = opts.generateExtraMarkup.split(',');
 
       // re-building the values, if dataset is given
       if (opts.dataset) {
@@ -473,7 +473,7 @@
       if (this.isItSnaps()) {
         this.snappingMap = this.createSnappingMap();
 
-        if (this.options.gfx.indexOf('snappingpoints') > -1) {
+        if (this.options.generateExtraMarkup.indexOf('snappingpoints') > -1) {
           this.createSnappingPoints(this.track);
         }
       }
