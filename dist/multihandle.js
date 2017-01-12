@@ -656,7 +656,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           handler.inputReference.options.selectedIndex = value;
         } else {
           var posValues = this.getPossibleValuesFor(handler, value);
-          console.log(value, posValues);
           if (this.options.handlerOverlap === 'exclusive') {
             if (value < posValues.min || value > posValues.max) {
               return;

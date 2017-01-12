@@ -579,7 +579,6 @@
         handler.inputReference.options.selectedIndex = value;
       } else {
         const posValues = this.getPossibleValuesFor(handler, value);
-        console.log(value, posValues);
         if (this.options.handlerOverlap === 'exclusive') {
           if (value < posValues.min || value > posValues.max) {
             return;
