@@ -181,6 +181,9 @@
         // `snappingpoints` right now
         generateExtraMarkup: '',
 
+        // null, exclusive, inclusive
+        handlerOverlap: null,
+
         // decorate them as you like
         tplTrack: '<span class="multihandle__track-deco"></span>${handlers}',
         tplHandler: '${label}',
@@ -575,11 +578,41 @@
       if (this.options.dataset === 'select') {
         handler.inputReference.options.selectedIndex = value;
       } else {
+        const posValues = this.getPossibleValuesFor(handler, value);
+        console.log(value, posValues);
+        if (this.options.handlerOverlap === 'exclusive') {
+          if (value < posValues.min || value > posValues.max) {
+            return;
+          }
+        } else if (this.options.handlerOverlap === 'inclusive') {
+          if (value <= posValues.min || value >= posValues.max) {
+            return;
+          }
+        }
+
         handler.inputReference.value = value;
       }
 
       handler.inputReference.dispatchEvent(newEvent('input'));
       this.setHandlerPos(handler, percent);
+    }
+
+    getPossibleValuesFor(handler, overlap) {
+      const handlerIndex = this.handlers.indexOf(handler);
+      const ret = {
+        min: this.options.min - this.options.step,
+        max: this.options.max + this.options.step
+      };
+
+      if (handlerIndex > 0) {
+        ret.min = parseFloat(this.handlers[handlerIndex - 1].inputReference.value, 10);
+      }
+
+      if (handlerIndex < this.handlers.length - 1) {
+        ret.max = parseFloat(this.handlers[handlerIndex + 1].inputReference.value, 10);
+      }
+
+      return ret;
     }
 
     /**

@@ -24,11 +24,22 @@ html, body {
 
   <div class="container">
 
-    <h2>Two handlers with bars between them</h2>
+    <h2>Two handlers with bars between them, exclusive overlapping</h2>
 
     <form action="" method="get">
 
-    <div class="multihandle multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-generate-extra-markup="snappingpoints">
+    <div class="multihandle multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-generate-extra-markup="snappingpoints" data-handler-overlap="exclusive">
+      <div class="multihandle__component"></div>
+      <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
+      <input type="text" name="one" value="3" />
+      <input type="text" name="two[array]" value="7" />
+    </div>
+
+    <h2>Two handlers with bars between them, inclusive overlapping</h2>
+
+    <form action="" method="get">
+
+    <div class="multihandle multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-generate-extra-markup="snappingpoints" data-handler-overlap="inclusive">
       <div class="multihandle__component"></div>
       <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
       <input type="text" name="one" value="3" />
