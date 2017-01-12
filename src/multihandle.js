@@ -59,6 +59,22 @@
   }
 
   /**
+   * Vanilla version of $.offset
+   *
+   * @param      {DOMNode}  el
+   * @return     {Object}  left and top coordinates of object
+   */
+  function getOffset(el) {
+    const rect = el.getBoundingClientRect();
+
+    return {
+      top: rect.top + document.body.scrollTop,
+      left: rect.left + document.body.scrollLeft
+    };
+  }
+
+
+  /**
    * Utility function to create events
    *
    * @param  {String} eventType
@@ -519,7 +535,7 @@
       if (found < 0) {
         const parent = closest(evt.target, '.multihandle__track');
         if (parent) {
-          this.jumpToPx(this.handlers[0], getClientX(evt) - this.track.offsetLeft);
+          this.jumpToPx(this.handlers[0], getClientX(evt) - getOffset(this.track).left);
         }
         return;
       }
@@ -556,7 +572,7 @@
      */
     onMouseMove(evt) {
       if (this.dragging && this.dragging.handlerIx > -1) {
-        const newLeftPx = getClientX(evt) - this.track.offsetLeft;
+        const newLeftPx = getClientX(evt) - getOffset(this.track).left;
         const percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
         this.setValueByPercent(this.dragging.handler, percent);

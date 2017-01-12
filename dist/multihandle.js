@@ -65,6 +65,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /**
+   * Vanilla version of $.offset
+   *
+   * @param      {DOMNode}  el
+   * @return     {Object}  left and top coordinates of object
+   */
+  function getOffset(el) {
+    var rect = el.getBoundingClientRect();
+
+    return {
+      top: rect.top + document.body.scrollTop,
+      left: rect.left + document.body.scrollLeft
+    };
+  }
+
+  /**
    * Utility function to create events
    *
    * @param  {String} eventType
@@ -587,7 +602,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (found < 0) {
           var parent = closest(evt.target, '.multihandle__track');
           if (parent) {
-            this.jumpToPx(this.handlers[0], getClientX(evt) - this.track.offsetLeft);
+            this.jumpToPx(this.handlers[0], getClientX(evt) - getOffset(this.track).left);
           }
           return;
         }
@@ -630,7 +645,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'onMouseMove',
       value: function onMouseMove(evt) {
         if (this.dragging && this.dragging.handlerIx > -1) {
-          var newLeftPx = getClientX(evt) - this.track.offsetLeft;
+          var newLeftPx = getClientX(evt) - getOffset(this.track).left;
           var percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
 
           this.setValueByPercent(this.dragging.handler, percent);
