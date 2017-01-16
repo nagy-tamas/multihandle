@@ -240,11 +240,14 @@
      */
     createHandlers(inputs) {
       const self = this;
-      return inputs.reduce((previous, current) => (
-        `${previous}<a href="javascript:void(0)" class="multihandle__handle">
-          ${self.options.tplHandler}
-        </a>`), ''
-      );
+      let ix = -1;
+      return inputs.reduce((previous, current) => {
+        ix++;
+        return `${previous}<a href="javascript:void(0)"
+          class="multihandle__handle multihandle__handle--${ix}">
+            ${self.options.tplHandler}
+          </a>`;
+      }, '');
     }
 
     /**

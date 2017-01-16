@@ -253,8 +253,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'createHandlers',
       value: function createHandlers(inputs) {
         var self = this;
+        var ix = -1;
         return inputs.reduce(function (previous, current) {
-          return previous + '<a href="javascript:void(0)" class="multihandle__handle">\n          ' + self.options.tplHandler + '\n        </a>';
+          ix++;
+          return previous + '<a href="javascript:void(0)"\n          class="multihandle__handle multihandle__handle--' + ix + '">\n            ' + self.options.tplHandler + '\n          </a>';
         }, '');
       }
 
