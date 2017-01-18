@@ -121,6 +121,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return el;
   }
 
+  /**
+   * "parent" node is a parent of (or is the same as) "child" node?
+   *
+   * @param {DOMNode} parent  parent element
+   * @param {DOMNode} child   child element
+   * @param {bool}            contains, equals: true, otherwise: false
+   */
+  function isAscendantOf(parent, child) {
+    var current = child;
+
+    while (current) {
+      if (current === parent) {
+        break;
+      }
+      current = current.parentNode;
+    }
+    return current === parent;
+  }
+
   var MultiHandle = function () {
     /**
      * Creates the main component
@@ -590,6 +609,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       /**
+       * Finds out if a click happened on one of the handlers
+       *
+       * @param  {Event}  evt  The event
+       * @return {DOMNode}   found handler
+       */
+
+    }, {
+      key: 'getClickedHandler',
+      value: function getClickedHandler(evt) {
+        return this.handlers.find(function (handler) {
+          return isAscendantOf(handler, evt.target);
+        });
+      }
+
+      /**
        * This could be a start for dragging one of the handlers
        *
        * @param  {Event} evt
@@ -600,8 +634,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'onMouseDown',
       value: function onMouseDown(evt) {
         // if click triggered somewhere in our component, not on one of the handlers...
-        var found = this.handlers.indexOf(evt.target);
-        if (found < 0) {
+        var foundHandler = this.getClickedHandler(evt);
+        var foundIx = -1;
+        if (foundHandler) {
+          foundIx = this.handlers.indexOf(foundHandler);
+        }
+
+        if (!foundHandler) {
           var parent = closest(evt.target, '.multihandle__track');
           if (parent) {
             this.jumpToPx(this.handlers[0], getClientX(evt) - getOffset(this.track).left);
@@ -610,9 +649,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         this.dragging = {
-          handlerIx: found,
-          handler: this.handlers[found],
-          startLeft: this.handlers[found].offsetLeft,
+          handlerIx: foundIx,
+          handler: foundHandler,
+          startLeft: foundHandler.offsetLeft,
           startX: getClientX(evt)
         };
 
