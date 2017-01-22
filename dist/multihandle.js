@@ -642,7 +642,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'onMouseDown',
       value: function onMouseDown(evt) {
-        // if click triggered somewhere in our component, not on one of the handlers...
+        // if the click was triggered somewhere in our component,
+        // not on one of the handlers...
         var foundHandler = this.getClickedHandler(evt);
         var foundIx = -1;
         if (foundHandler) {
@@ -651,8 +652,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         if (!foundHandler) {
           var parent = closest(evt.target, '.multihandle__track');
-          if (parent) {
-            this.jumpToPx(this.handlers[0], getClientX(evt) - getOffset(this.track).left);
+          if (parent && this.currentlyHovered) {
+            this.jumpToPx(this.currentlyHovered, getClientX(evt) - getOffset(this.track).left);
           }
           return;
         }
