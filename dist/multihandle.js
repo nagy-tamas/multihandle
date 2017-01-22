@@ -601,7 +601,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           handle.addEventListener('keydown', function (evt) {
             return _this3.onHandlerKeyDown(evt);
           });
-          // stops link dragging - won't work with addEventListener!
+
+          // stopping the browser's d&d feature on the anchor.
+          // doesn't work with the addEventListener way, that's why we need this
+          // direct assignment here
           handle.ondragstart = function (evt) {
             return false;
           };
@@ -826,6 +829,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function jumpToPx(handler, px) {
         var percent = this.normalizePercent(this.pixelToPercent(px));
         this.setValueByPercent(handler, percent);
+        handler.inputReference.dispatchEvent(newEvent('inputend'));
       }
 
       /**

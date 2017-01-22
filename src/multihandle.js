@@ -540,7 +540,10 @@
 
       this.handlers.forEach((handle) => {
         handle.addEventListener('keydown', evt => this.onHandlerKeyDown(evt));
-        // stops link dragging - won't work with addEventListener!
+
+        // stopping the browser's d&d feature on the anchor.
+        // doesn't work with the addEventListener way, that's why we need this
+        // direct assignment here
         handle.ondragstart = evt => (false);
       });
     }
@@ -732,6 +735,7 @@
     jumpToPx(handler, px) {
       const percent = this.normalizePercent(this.pixelToPercent(px));
       this.setValueByPercent(handler, percent);
+      handler.inputReference.dispatchEvent(newEvent('inputend'));
     }
 
     /**
