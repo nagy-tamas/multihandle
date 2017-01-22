@@ -531,11 +531,13 @@
     bindEvents() {
       this.container.addEventListener('mousedown', evt => this.onMouseDown(evt));
       this.container.addEventListener('touchstart', evt => this.onMouseDown(evt));
+      this.container.addEventListener('mousemove', evt => this.onContainerMouseMove(evt));
+      this.container.addEventListener('mouseleave', evt => this.onContainerMouseLeave(evt));
       document.body.addEventListener('mouseup', evt => this.onMouseUp(evt));
       document.body.addEventListener('touchend', evt => this.onMouseUp(evt));
       document.body.addEventListener('touchcancel', evt => this.onMouseUp(evt));
-      document.body.addEventListener('mousemove', evt => this.onMouseMove(evt));
-      document.body.addEventListener('touchmove', evt => this.onMouseMove(evt));
+      document.body.addEventListener('mousemove', evt => this.onBodyMouseMove(evt));
+      document.body.addEventListener('touchmove', evt => this.onBodyMouseMove(evt));
       this.el.addEventListener('inputUpdated', evt => this.syncHandlersToInputs());
 
       this.handlers.forEach((handle) => {
@@ -613,13 +615,64 @@
      * @param  {Event} evt
      * @return {undefined}
      */
-    onMouseMove(evt) {
+    onBodyMouseMove(evt) {
       if (this.dragging && this.dragging.handlerIx > -1) {
         const newLeftPx = getClientX(evt) - getOffset(this.track).left;
-        const percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
+        const percent = this.normalizePercent(this.pxToPercent(newLeftPx));
 
         this.setValueByPercent(this.dragging.handler, percent);
       }
+    }
+
+    /**
+     * We show which handle will snap to the mouse's position when a user clicks
+     *
+     * @param  {Event} evt
+     * @return {undefined}
+     */
+    onContainerMouseMove(evt) {
+      const closestHandler = this.getClosestHandlerToPx(getClientX(evt));
+      if (closestHandler !== this.currentlyHovered) {
+        if (this.currentlyHovered) {
+          this.currentlyHovered.classList.remove('multihandle__handle--hovered');
+        }
+
+        closestHandler.classList.add('multihandle__handle--hovered');
+        this.currentlyHovered = closestHandler;
+      }
+    }
+
+    /**
+     * We remove the hover classes
+     *
+     * @param  {Event} evt
+     * @return {undefined}
+     */
+    onContainerMouseLeave(evt) {
+      if (this.currentlyHovered) {
+        this.currentlyHovered.classList.remove('multihandle__handle--hovered');
+        this.currentlyHovered = null;
+      }
+    }
+
+    /**
+     * Which handler is the closest one to this x coordinate?
+     *
+     * @param  {Float} px
+     * @return {DOMNode} handler
+     */
+    getClosestHandlerToPx(px) {
+      let min = this.track.clientWidth;
+      let currentHandler = this.handlers[0];
+
+      this.handlers.forEach(handler => {
+        const distance = Math.abs(px - getOffset(handler).left);
+        if (distance < min) {
+          min = distance;
+          currentHandler = handler;
+        }
+      });
+      return currentHandler;
     }
 
     /**
@@ -655,7 +708,13 @@
       this.setHandlerPos(handler, percent);
     }
 
-    getPossibleValuesFor(handler, overlap) {
+    /**
+     * Returns the value of possible min and max value for a given handler.
+     *
+     * @param  {DOMNode} handler
+     * @return {Object}   { min, max }
+     */
+    getPossibleValuesFor(handler) {
       const handlerIndex = this.handlers.indexOf(handler);
       const ret = {
         min: this.options.min - this.options.step,
@@ -733,7 +792,7 @@
     }
 
     jumpToPx(handler, px) {
-      const percent = this.normalizePercent(this.pixelToPercent(px));
+      const percent = this.normalizePercent(this.pxToPercent(px));
       this.setValueByPercent(handler, percent);
       handler.inputReference.dispatchEvent(newEvent('inputend'));
     }
@@ -793,7 +852,7 @@
      * @param  {Float} px
      * @return {Float} percent
      */
-    pixelToPercent(px) {
+    pxToPercent(px) {
       const full = this.track.clientWidth;
       return (px / full) * 100;
     }

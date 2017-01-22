@@ -578,6 +578,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.container.addEventListener('touchstart', function (evt) {
           return _this3.onMouseDown(evt);
         });
+        this.container.addEventListener('mousemove', function (evt) {
+          return _this3.onContainerMouseMove(evt);
+        });
+        this.container.addEventListener('mouseleave', function (evt) {
+          return _this3.onContainerMouseLeave(evt);
+        });
         document.body.addEventListener('mouseup', function (evt) {
           return _this3.onMouseUp(evt);
         });
@@ -588,10 +594,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return _this3.onMouseUp(evt);
         });
         document.body.addEventListener('mousemove', function (evt) {
-          return _this3.onMouseMove(evt);
+          return _this3.onBodyMouseMove(evt);
         });
         document.body.addEventListener('touchmove', function (evt) {
-          return _this3.onMouseMove(evt);
+          return _this3.onBodyMouseMove(evt);
         });
         this.el.addEventListener('inputUpdated', function (evt) {
           return _this3.syncHandlersToInputs();
@@ -686,14 +692,74 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'onMouseMove',
-      value: function onMouseMove(evt) {
+      key: 'onBodyMouseMove',
+      value: function onBodyMouseMove(evt) {
         if (this.dragging && this.dragging.handlerIx > -1) {
           var newLeftPx = getClientX(evt) - getOffset(this.track).left;
-          var percent = this.normalizePercent(this.pixelToPercent(newLeftPx));
+          var percent = this.normalizePercent(this.pxToPercent(newLeftPx));
 
           this.setValueByPercent(this.dragging.handler, percent);
         }
+      }
+
+      /**
+       * We show which handle will snap to the mouse's position when a user clicks
+       *
+       * @param  {Event} evt
+       * @return {undefined}
+       */
+
+    }, {
+      key: 'onContainerMouseMove',
+      value: function onContainerMouseMove(evt) {
+        var closestHandler = this.getClosestHandlerToPx(getClientX(evt));
+        if (closestHandler !== this.currentlyHovered) {
+          if (this.currentlyHovered) {
+            this.currentlyHovered.classList.remove('multihandle__handle--hovered');
+          }
+
+          closestHandler.classList.add('multihandle__handle--hovered');
+          this.currentlyHovered = closestHandler;
+        }
+      }
+
+      /**
+       * We remove the hover classes
+       *
+       * @param  {Event} evt
+       * @return {undefined}
+       */
+
+    }, {
+      key: 'onContainerMouseLeave',
+      value: function onContainerMouseLeave(evt) {
+        if (this.currentlyHovered) {
+          this.currentlyHovered.classList.remove('multihandle__handle--hovered');
+          this.currentlyHovered = null;
+        }
+      }
+
+      /**
+       * Which handler is the closest one to this x coordinate?
+       *
+       * @param  {Float} px
+       * @return {DOMNode} handler
+       */
+
+    }, {
+      key: 'getClosestHandlerToPx',
+      value: function getClosestHandlerToPx(px) {
+        var min = this.track.clientWidth;
+        var currentHandler = this.handlers[0];
+
+        this.handlers.forEach(function (handler) {
+          var distance = Math.abs(px - getOffset(handler).left);
+          if (distance < min) {
+            min = distance;
+            currentHandler = handler;
+          }
+        });
+        return currentHandler;
       }
 
       /**
@@ -731,9 +797,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         handler.inputReference.dispatchEvent(newEvent('input'));
         this.setHandlerPos(handler, percent);
       }
+
+      /**
+       * Returns the value of possible min and max value for a given handler.
+       *
+       * @param  {DOMNode} handler
+       * @return {Object}   { min, max }
+       */
+
     }, {
       key: 'getPossibleValuesFor',
-      value: function getPossibleValuesFor(handler, overlap) {
+      value: function getPossibleValuesFor(handler) {
         var handlerIndex = this.handlers.indexOf(handler);
         var ret = {
           min: this.options.min - this.options.step,
@@ -827,7 +901,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'jumpToPx',
       value: function jumpToPx(handler, px) {
-        var percent = this.normalizePercent(this.pixelToPercent(px));
+        var percent = this.normalizePercent(this.pxToPercent(px));
         this.setValueByPercent(handler, percent);
         handler.inputReference.dispatchEvent(newEvent('inputend'));
       }
@@ -902,8 +976,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        */
 
     }, {
-      key: 'pixelToPercent',
-      value: function pixelToPercent(px) {
+      key: 'pxToPercent',
+      value: function pxToPercent(px) {
         var full = this.track.clientWidth;
         return px / full * 100;
       }
