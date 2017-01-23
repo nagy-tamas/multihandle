@@ -27,11 +27,26 @@ html, body {
 .multihandle__handle--hovered {
   font-style: italic;
 }
+.multihandle__handle-dot {
+  width: 100%;
+  height: 100%;
+  background: #999;
+}
 </style>
 </head>
 <body>
 
   <div class="container">
+
+    <h2>Templated handlers</h2>
+
+    <form action="" method="get">
+
+    <div class="multihandle multihandle--loading" data-min="2" data-max="8" data-step="0.2" data-generate-extra-markup="snappingpoints" data-handler-overlap="exclusive" data-tpl-handler="&lt;div class=&quot;multihandle__handle-dot&quot;&gt;&lt;span class=&quot;multihandle__handle-label&quot;&gt;&lt;/span&gt;&lt;/div&gt;">
+      <div class="multihandle__component"></div>
+      <!-- Don't use range here! Or if you need to, repeat the min/max/step attributes from the container properly -->
+      <input type="text" name="one" value="3" />
+    </div>
 
     <h2>Two handlers with bars between them, exclusive overlapping</h2>
 

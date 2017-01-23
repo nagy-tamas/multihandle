@@ -221,7 +221,7 @@
 
         // decorate them as you like
         tplTrack: '<span class="multihandle__track-deco"></span>${handlers}',
-        tplHandler: '${label}',
+        tplHandler: '<span class="multihandle__handle-label">${label}</span>',
         tplSnappingpoint: '${label}'
       }, domStringMapToObj(this.el.dataset), options);
 
@@ -309,6 +309,12 @@
       const handlers = [];
       Array.prototype.forEach.call(track.querySelectorAll('.multihandle__handle'), (el, ix) => {
         el.inputReference = this.inputs[ix];
+
+        if (el.classList.contains('multihandle__handle-label')) {
+          el.label = el;
+        } else {
+          el.label = el.querySelector('.multihandle__handle-label');
+        }
         handlers.push(el);
       });
       return handlers;
@@ -483,7 +489,7 @@
         label = value;
       }
 
-      handler.innerHTML = this.options.tplHandler.replace(/\${label}/, label);
+      handler.label.innerHTML = label;
     }
 
     /**

@@ -233,7 +233,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
           // decorate them as you like
           tplTrack: '<span class="multihandle__track-deco"></span>${handlers}',
-          tplHandler: '${label}',
+          tplHandler: '<span class="multihandle__handle-label">${label}</span>',
           tplSnappingpoint: '${label}'
         }, domStringMapToObj(this.el.dataset), options);
 
@@ -330,6 +330,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var handlers = [];
         Array.prototype.forEach.call(track.querySelectorAll('.multihandle__handle'), function (el, ix) {
           el.inputReference = _this.inputs[ix];
+
+          if (el.classList.contains('multihandle__handle-label')) {
+            el.label = el;
+          } else {
+            el.label = el.querySelector('.multihandle__handle-label');
+          }
           handlers.push(el);
         });
         return handlers;
@@ -520,7 +526,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           label = value;
         }
 
-        handler.innerHTML = this.options.tplHandler.replace(/\${label}/, label);
+        handler.label.innerHTML = label;
       }
 
       /**
